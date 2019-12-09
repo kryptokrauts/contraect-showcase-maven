@@ -1,3 +1,5 @@
+@compiler >= 4
+
 contract CryptoHamster =
    datatype event = NewHamster(indexed int, string, hash)
 

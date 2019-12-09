@@ -60,7 +60,7 @@
       <plugin>
         <groupId>com.kryptokrauts</groupId>
         <artifactId>contraect-maven-plugin</artifactId>
-        <version>0.9.0</version>
+        <version>0.9.1</version>
         <executions>
           <execution>
             <phase>generate-sources</phase>
@@ -68,8 +68,8 @@
         </executions>
         <configuration>
           <targetPath>target/generated-sources/contraect</targetPath>
-          <targetPackage>com.kryptokrauts.generated.contraect</targetPackage>
-          <datatypePackage>com.kryptokrauts.generated.contraect.datatypes</datatypePackage>
+          <targetPackage>com.kryptokrauts.contraect.generated</targetPackage>
+          <datatypePackage>com.kryptokrauts.contraect.generated.datatypes</datatypePackage>
           <directories>
             <directory>${project.basedir}/src/test/resources</directory>
           </directories>
