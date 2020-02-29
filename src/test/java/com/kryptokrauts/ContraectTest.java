@@ -71,15 +71,15 @@ public class ContraectTest {
   public void cryptoHamsterTest() {
     CryptoHamster cryptoHamsterInstance = new CryptoHamster(config, null);
 
-    // expecting error as contract doesn't exists and no contractId provided
+    // expecting error as contract doesn't exist and no contractId provided
     Assertions.assertThrows(Exception.class, () -> cryptoHamsterInstance.nameExists(HAMSTER_NAME));
 
     // deploy contract
     Pair<String, String> deployment = cryptoHamsterInstance.deploy();
-    String contractId = deployment.getValue0();
-    String txHash = deployment.getValue1();
-    log.info("contract id: {}", contractId);
+    String txHash = deployment.getValue0();
+    String contractId = deployment.getValue1();
     log.info("tx-hash of deployment: {}", txHash);
+    log.info("contract id: {}", contractId);
     Assertions.assertNotNull(contractId);
 
     // expect hamster to not exist
@@ -101,10 +101,10 @@ public class ContraectTest {
     BigDecimal tokensToSendAE = new BigDecimal("1.337");
     Pair<String, String> deployment =
         krautTokenInstance.deploy("kryptokrauts", BigInteger.valueOf(18), "KRAUT");
-    String contractId = deployment.getValue0();
-    String txHash = deployment.getValue1();
-    log.info("contract id: {}", contractId);
+    String txHash = deployment.getValue0();
+    String contractId = deployment.getValue1();
     log.info("tx-hash of deployment: {}", txHash);
+    log.info("contract id: {}", contractId);
 
     // verify total token supply
     Assertions.assertEquals(
@@ -164,10 +164,10 @@ public class ContraectTest {
     recipientConditions.put(new Address(initialRecipient2.getPublicKey()), BigInteger.valueOf(30));
     recipientConditions.put(new Address(initialRecipient3.getPublicKey()), BigInteger.valueOf(10));
     Pair<String, String> deployment = paymentSplitterInstance.deploy(recipientConditions);
-    String contractId = deployment.getValue0();
-    String txHash = deployment.getValue1();
-    log.info("contract id: {}", contractId);
+    String txHash = deployment.getValue0();
+    String contractId = deployment.getValue1();
     log.info("tx-hash of deployment: {}", txHash);
+    log.info("contract id: {}", contractId);
 
     // should fail when providing amount of 0 AE to the payAndSplit method
     try {
