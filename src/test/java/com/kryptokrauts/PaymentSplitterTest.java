@@ -12,26 +12,47 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.javatuples.Pair;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 @Slf4j
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class PaymentSplitterTest extends BaseTest {
 
+  private static String contractId;
+
+  private static BaseKeyPair initialRecipient1;
+  private static BaseKeyPair initialRecipient2;
+  private static BaseKeyPair initialRecipient3;
+
   @Test
-  public void paymentSplitterTest() {
+  @Order(1)
+  public void deploy() {
     PaymentSplitter paymentSplitterInstance = new PaymentSplitter(config, null);
-    BaseKeyPair initialRecipient1 = new KeyPairServiceFactory().getService().generateBaseKeyPair();
-    BaseKeyPair initialRecipient2 = new KeyPairServiceFactory().getService().generateBaseKeyPair();
-    BaseKeyPair initialRecipient3 = new KeyPairServiceFactory().getService().generateBaseKeyPair();
+    initialRecipient1 = new KeyPairServiceFactory().getService().generateBaseKeyPair();
+    initialRecipient2 = new KeyPairServiceFactory().getService().generateBaseKeyPair();
+    initialRecipient3 = new KeyPairServiceFactory().getService().generateBaseKeyPair();
     Map<Address, BigInteger> recipientConditions = new HashMap<>();
+    // should receive 60%
     recipientConditions.put(new Address(initialRecipient1.getPublicKey()), BigInteger.valueOf(60));
+    // should receive 30%
     recipientConditions.put(new Address(initialRecipient2.getPublicKey()), BigInteger.valueOf(30));
+    // should receive 10%
     recipientConditions.put(new Address(initialRecipient3.getPublicKey()), BigInteger.valueOf(10));
     Pair<String, String> deployment = paymentSplitterInstance.deploy(recipientConditions);
     String txHash = deployment.getValue0();
-    String contractId = deployment.getValue1();
+    contractId = deployment.getValue1();
     log.info("tx-hash of deployment: {}", txHash);
     log.info("contract id: {}", contractId);
+  }
+
+  @Test
+  @Order(2)
+  public void payAndSplitFails() {
+    // initialize instance with previously deployed contract
+    PaymentSplitter paymentSplitterInstance = new PaymentSplitter(config, contractId);
 
     // should fail when providing amount of 0 AE to the payAndSplit method
     try {
@@ -39,6 +60,14 @@ public class PaymentSplitterTest extends BaseTest {
     } catch (Exception e) {
       Assertions.assertTrue(e.getMessage().contains("contract didn't receive any payment"));
     }
+  }
+
+  @Test
+  @Order(2)
+  public void payAndSplitSucceeds() {
+    // initialize instance with previously deployed contract
+    PaymentSplitter paymentSplitterInstance = new PaymentSplitter(config, contractId);
+
     // payAndSplit 10 AE
     BigInteger amountAettos = unitConversionService18Decimals.toSmallestUnit("10");
     paymentSplitterInstance.payAndSplit(amountAettos);

@@ -1,0 +1,57 @@
+// ISC License
+//
+// Copyright (c) 2019, kryptokrauts.com
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+// REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+// AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+// INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+// LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+// OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+// PERFORMANCE OF THIS SOFTWARE.
+//
+contract BatchPayment =
+
+    // STATEFUL FUNCTIONS
+
+    payable stateful entrypoint proceedBatchPayment(recipients: map(address, int)) =
+        require(sumValues(recipients) == Call.value, "funds insufficient")
+        let recipientList: list((address * int)) = Map.to_list(recipients)
+        proceedSinglePayments(recipientList)
+
+    stateful function proceedSinglePayments(recipients: list((address * int))) =
+        switch(recipients)
+            [] => ()
+            (recipient, value) :: l' =>
+                Chain.spend(recipient, value)
+                proceedSinglePayments(l')
+
+    // PRIVATE FUNCTIONS
+
+    function sumValues(recipients: map(address, int)) : int =
+        let recipientsList: list((address * int)) = Map.to_list(recipients)
+        let intList: list(int) = map(pair_second, recipientsList)
+        sum(intList, (x) => x)
+
+    // GENERIC HELPER FUNCTIONS
+
+    function map(f : 'a => 'b, l : list('a)) : list('b) =
+        switch(l)
+            [] => []
+            e :: l' => f(e) :: map(f, l')
+
+    function foldr(f : (('a, 'b) => 'b), z: 'b, l : list('a)) : 'b =
+        switch(l)
+            [] => z
+            e :: l' => f(e, foldr(f, z, l'))
+
+    function sum(l : list('a), f : 'a => int) : int =
+        foldr((x, y) => x + y, 0, map(f, l))
+
+    function pair_second(tuple) =
+        switch(tuple)
+            (_, e) => e
