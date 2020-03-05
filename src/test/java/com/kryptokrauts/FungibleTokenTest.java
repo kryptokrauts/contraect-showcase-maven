@@ -31,10 +31,10 @@ public class FungibleTokenTest extends BaseTest {
     try {
       krautTokenInstance.deploy(
           "failed shit", BigInteger.valueOf(0), "FAIL", Optional.of(BigInteger.valueOf(-1)));
+      Assertions.fail("deployment should have failed ...");
     } catch (Exception e) {
-      log.info("deployment failed as expected due to error: {}", e.getMessage());
+      log.info("deployment failed as expected, msg: {}", e.getMessage());
     }
-    Assertions.fail("deployment should have failed ...");
   }
 
   @Test
