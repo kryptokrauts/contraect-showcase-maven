@@ -1,6 +1,7 @@
 package com.kryptokrauts;
 
 import com.kryptokrauts.contraect.generated.CryptoHamster;
+import com.kryptokrauts.contraect.generated.CryptoHamster.Hash;
 import lombok.extern.slf4j.Slf4j;
 import org.javatuples.Pair;
 import org.junit.jupiter.api.Assertions;
@@ -51,8 +52,8 @@ public class CryptoHamsterTest extends BaseTest {
     Assertions.assertTrue(cryptoHamsterInstance.nameExists(HAMSTER_NAME));
 
     // verify hamster dna
-    String hamsterDna = cryptoHamsterInstance.getHamsterDNA(HAMSTER_NAME).toString();
+    Hash hamsterDna = cryptoHamsterInstance.getHamsterDNA(HAMSTER_NAME);
     log.info("hamster dna: {}", hamsterDna);
-    Assertions.assertEquals(HAMSTER_DNA, hamsterDna);
+    Assertions.assertEquals(HAMSTER_DNA, hamsterDna.getHash());
   }
 }
