@@ -32,7 +32,7 @@
     <dependency>
       <groupId>com.kryptokrauts</groupId>
       <artifactId>aepp-sdk-java</artifactId>
-      <version>2.2.0</version>
+      <version>2.2.1</version>
     </dependency>
     <dependency>
       <groupId>org.javatuples</groupId>
@@ -66,7 +66,7 @@
       <plugin>
         <groupId>com.kryptokrauts</groupId>
         <artifactId>contraect-maven-plugin</artifactId>
-        <version>0.9.2</version>
+        <version>1.0.0-SNAPSHOT</version>
         <configuration>
           <codegen>
             <targetPath>${project.build.directory}/generated-sources/contraect</targetPath>
@@ -75,7 +75,7 @@
             <directories>
               <directory>${project.basedir}/src/test/resources</directory>
             </directories>
-            <compilerBaseUrl>https://compiler.aepps.com</compilerBaseUrl>
+            <compilerBaseUrl>http://compiler.aelocal:3080</compilerBaseUrl>
           </codegen>
         </configuration>
         <executions>
