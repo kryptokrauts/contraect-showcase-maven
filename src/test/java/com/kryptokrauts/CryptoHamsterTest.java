@@ -5,13 +5,10 @@ import com.kryptokrauts.contraect.generated.CryptoHamster.Hash;
 import lombok.extern.slf4j.Slf4j;
 import org.javatuples.Pair;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 
 @Slf4j
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CryptoHamsterTest extends BaseTest {
 
   private static final String HAMSTER_NAME = "kryptokrauts";
@@ -21,9 +18,8 @@ public class CryptoHamsterTest extends BaseTest {
 
   private static String contractId;
 
-  @Test
-  @Order(1)
-  public void deploy() {
+  @BeforeAll
+  public static void deploy() {
     CryptoHamster cryptoHamsterInstance = new CryptoHamster(config, null);
 
     // expecting error as contract doesn't exist and no contractId provided
@@ -39,7 +35,6 @@ public class CryptoHamsterTest extends BaseTest {
   }
 
   @Test
-  @Order(2)
   public void createAndVerifyHamster() {
     // initialize instance with previously deployed contract
     CryptoHamster cryptoHamsterInstance = new CryptoHamster(config, contractId);

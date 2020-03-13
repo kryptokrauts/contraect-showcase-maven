@@ -12,8 +12,8 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.javatuples.Pair;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
@@ -27,9 +27,8 @@ public class PaymentSplitterTest extends BaseTest {
   private static BaseKeyPair initialRecipient2;
   private static BaseKeyPair initialRecipient3;
 
-  @Test
-  @Order(1)
-  public void deploy() {
+  @BeforeAll
+  public static void deploy() {
     PaymentSplitter paymentSplitterInstance = new PaymentSplitter(config, null);
     initialRecipient1 = new KeyPairServiceFactory().getService().generateBaseKeyPair();
     initialRecipient2 = new KeyPairServiceFactory().getService().generateBaseKeyPair();
@@ -49,7 +48,6 @@ public class PaymentSplitterTest extends BaseTest {
   }
 
   @Test
-  @Order(2)
   public void payAndSplitFails() {
     // initialize instance with previously deployed contract
     PaymentSplitter paymentSplitterInstance = new PaymentSplitter(config, contractId);
@@ -63,7 +61,6 @@ public class PaymentSplitterTest extends BaseTest {
   }
 
   @Test
-  @Order(2)
   public void payAndSplitSucceeds() {
     // initialize instance with previously deployed contract
     PaymentSplitter paymentSplitterInstance = new PaymentSplitter(config, contractId);

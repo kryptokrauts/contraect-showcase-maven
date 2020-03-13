@@ -12,13 +12,10 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.javatuples.Pair;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 
 @Slf4j
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class BatchPaymentTest extends BaseTest {
 
   private static String contractId;
@@ -27,9 +24,8 @@ public class BatchPaymentTest extends BaseTest {
   private static BaseKeyPair recipient2;
   private static BaseKeyPair recipient3;
 
-  @Test
-  @Order(1)
-  public void deploy() {
+  @BeforeAll
+  public static void deploy() {
     BatchPayment batchPaymentInstance = new BatchPayment(config, null);
     // deploy contract
     Pair<String, String> deployment = batchPaymentInstance.deploy();
@@ -41,7 +37,6 @@ public class BatchPaymentTest extends BaseTest {
   }
 
   @Test
-  @Order(2)
   public void proceedBatchPayment() {
     // initialize instance with previously deployed contract
     BatchPayment batchPaymentInstance = new BatchPayment(config, contractId);
