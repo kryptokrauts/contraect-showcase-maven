@@ -18,7 +18,7 @@
   <pluginRepositories>
     <pluginRepository>
       <id>jcenter</id>
-      <url>http://jcenter.bintray.com</url>
+      <url>https://jcenter.bintray.com</url>
     </pluginRepository>
   </pluginRepositories>
 
@@ -66,7 +66,7 @@
       <plugin>
         <groupId>com.kryptokrauts</groupId>
         <artifactId>contraect-maven-plugin</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.0</version>
         <configuration>
           <codegen>
             <targetPath>${project.build.directory}/generated-sources/contraect</targetPath>
