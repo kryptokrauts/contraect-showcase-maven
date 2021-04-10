@@ -1,6 +1,6 @@
 package com.kryptokrauts;
 
-import com.kryptokrauts.aeternity.sdk.domain.secret.impl.BaseKeyPair;
+import com.kryptokrauts.aeternity.sdk.domain.secret.KeyPair;
 import com.kryptokrauts.aeternity.sdk.service.account.domain.AccountResult;
 import com.kryptokrauts.aeternity.sdk.service.keypair.KeyPairServiceFactory;
 import com.kryptokrauts.contraect.generated.PaymentSplitter;
@@ -8,7 +8,6 @@ import com.kryptokrauts.contraect.generated.PaymentSplitter.Address;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.javatuples.Pair;
 import org.junit.jupiter.api.Assertions;
@@ -23,41 +22,28 @@ public class PaymentSplitterTest extends BaseTest {
 
   private static String contractId;
 
-  private static BaseKeyPair initialRecipient1;
-  private static BaseKeyPair initialRecipient2;
-  private static BaseKeyPair initialRecipient3;
+  private static KeyPair initialRecipient1;
+  private static KeyPair initialRecipient2;
+  private static KeyPair initialRecipient3;
 
   @BeforeAll
   public static void deploy() {
     PaymentSplitter paymentSplitterInstance = new PaymentSplitter(config, null);
-    initialRecipient1 = new KeyPairServiceFactory().getService().generateBaseKeyPair();
-    initialRecipient2 = new KeyPairServiceFactory().getService().generateBaseKeyPair();
-    initialRecipient3 = new KeyPairServiceFactory().getService().generateBaseKeyPair();
+    initialRecipient1 = new KeyPairServiceFactory().getService().generateKeyPair();
+    initialRecipient2 = new KeyPairServiceFactory().getService().generateKeyPair();
+    initialRecipient3 = new KeyPairServiceFactory().getService().generateKeyPair();
     Map<Address, BigInteger> recipientConditions = new HashMap<>();
     // should receive 60%
-    recipientConditions.put(new Address(initialRecipient1.getPublicKey()), BigInteger.valueOf(60));
+    recipientConditions.put(new Address(initialRecipient1.getAddress()), BigInteger.valueOf(60));
     // should receive 30%
-    recipientConditions.put(new Address(initialRecipient2.getPublicKey()), BigInteger.valueOf(30));
+    recipientConditions.put(new Address(initialRecipient2.getAddress()), BigInteger.valueOf(30));
     // should receive 10%
-    recipientConditions.put(new Address(initialRecipient3.getPublicKey()), BigInteger.valueOf(10));
+    recipientConditions.put(new Address(initialRecipient3.getAddress()), BigInteger.valueOf(10));
     Pair<String, String> deployment = paymentSplitterInstance.deploy(recipientConditions);
     String txHash = deployment.getValue0();
     contractId = deployment.getValue1();
     log.info("tx-hash of deployment: {}", txHash);
     log.info("contract id: {}", contractId);
-  }
-
-  @Test
-  public void payAndSplitFails() {
-    // initialize instance with previously deployed contract
-    PaymentSplitter paymentSplitterInstance = new PaymentSplitter(config, contractId);
-
-    // should fail when providing amount of 0 AE to the payAndSplit method
-    try {
-      paymentSplitterInstance.payAndSplit(BigInteger.ZERO);
-    } catch (Exception e) {
-      Assertions.assertTrue(e.getMessage().contains("contract didn't receive any payment"));
-    }
   }
 
   @Test
@@ -75,11 +61,11 @@ public class PaymentSplitterTest extends BaseTest {
 
     // verify accounts got the correct amount of AE
     AccountResult accountResult1 =
-        aeternityService.accounts.blockingGetAccount(Optional.of(initialRecipient1.getPublicKey()));
+        aeternityService.accounts.blockingGetAccount(initialRecipient1.getAddress());
     AccountResult accountResult2 =
-        aeternityService.accounts.blockingGetAccount(Optional.of(initialRecipient2.getPublicKey()));
+        aeternityService.accounts.blockingGetAccount(initialRecipient2.getAddress());
     AccountResult accountResult3 =
-        aeternityService.accounts.blockingGetAccount(Optional.of(initialRecipient3.getPublicKey()));
+        aeternityService.accounts.blockingGetAccount(initialRecipient3.getAddress());
     Assertions.assertEquals(
         unitConversionService18Decimals.toSmallestUnit("6"), accountResult1.getBalance());
     Assertions.assertEquals(
