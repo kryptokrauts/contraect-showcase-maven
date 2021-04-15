@@ -1,6 +1,5 @@
 package com.kryptokrauts;
 
-import org.junit.jupiter.api.BeforeAll;
 import com.kryptokrauts.aeternity.sdk.constants.BaseConstants;
 import com.kryptokrauts.aeternity.sdk.constants.Network;
 import com.kryptokrauts.aeternity.sdk.constants.VirtualMachine;
@@ -12,6 +11,7 @@ import com.kryptokrauts.aeternity.sdk.service.keypair.KeyPairService;
 import com.kryptokrauts.aeternity.sdk.service.keypair.KeyPairServiceFactory;
 import com.kryptokrauts.aeternity.sdk.service.unit.UnitConversionService;
 import com.kryptokrauts.aeternity.sdk.service.unit.impl.DefaultUnitConversionServiceImpl;
+import org.junit.jupiter.api.BeforeAll;
 
 public class BaseTest {
 
@@ -33,18 +33,29 @@ public class BaseTest {
   public static void init() {
     KeyPairService keyPairService = new KeyPairServiceFactory().getService();
     baseKeyPair = keyPairService.recoverKeyPair(PRIVATE_KEY);
-    config = AeternityServiceConfiguration.configure()
-        .compilerBaseUrl("http://compiler.aelocal:3080").baseUrl("http://aelocal")
-        .network(Network.LOCAL_IRIS_NETWORK).indaexBaseUrl("http://aelocal/v2").keyPair(baseKeyPair)
-        .targetVM(VirtualMachine.FATE).millisBetweenTrailsToWaitForConfirmation(100l).compile();
+    config =
+        AeternityServiceConfiguration.configure()
+            .compilerBaseUrl("http://compiler.aelocal:3080")
+            .baseUrl("http://aelocal")
+            .network(Network.LOCAL_IRIS_NETWORK)
+            .indaexBaseUrl("http://aelocal/v2")
+            .keyPair(baseKeyPair)
+            .targetVM(VirtualMachine.FATE)
+            .millisBetweenTrailsToWaitForConfirmation(100l)
+            .compile();
     aeternityService = new AeternityServiceFactory().getService(config);
   }
 
   private static void initTestNet() {
-    config = AeternityServiceConfiguration.configure()
-        .compilerBaseUrl(BaseConstants.DEFAULT_TESTNET_COMPILER_URL)
-        .baseUrl(BaseConstants.DEFAULT_TESTNET_URL).network(Network.TESTNET).keyPair(baseKeyPair)
-        .targetVM(VirtualMachine.FATE).millisBetweenTrailsToWaitForConfirmation(100l).compile();
+    config =
+        AeternityServiceConfiguration.configure()
+            .compilerBaseUrl(BaseConstants.DEFAULT_TESTNET_COMPILER_URL)
+            .baseUrl(BaseConstants.DEFAULT_TESTNET_URL)
+            .network(Network.TESTNET)
+            .keyPair(baseKeyPair)
+            .targetVM(VirtualMachine.FATE)
+            .millisBetweenTrailsToWaitForConfirmation(100l)
+            .compile();
     aeternityService = new AeternityServiceFactory().getService(config);
   }
 }
