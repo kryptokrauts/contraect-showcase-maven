@@ -1,7 +1,8 @@
-@compiler >= 4.2.0
+@compiler >= 6
 
 include "List.aes"
 include "Pair.aes"
+include "String.aes"
 include "../libs/Intcode.aes"
 
 contract AdventOfCodeDay11 =
