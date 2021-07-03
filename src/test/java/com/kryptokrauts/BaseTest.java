@@ -35,10 +35,10 @@ public class BaseTest {
     baseKeyPair = keyPairService.recoverKeyPair(PRIVATE_KEY);
     config =
         AeternityServiceConfiguration.configure()
-            .compilerBaseUrl("http://compiler.aelocal:3080")
-            .baseUrl("http://aelocal")
-            .network(Network.LOCAL_IRIS_NETWORK)
-            .indaexBaseUrl("http://aelocal/v2")
+            .compilerBaseUrl("http://localhost:3080")
+            .baseUrl("http://localhost")
+            .network(Network.DEVNET)
+            .indaexBaseUrl("http://localhost:4000")
             .keyPair(baseKeyPair)
             .targetVM(VirtualMachine.FATE)
             .millisBetweenTrailsToWaitForConfirmation(100l)
