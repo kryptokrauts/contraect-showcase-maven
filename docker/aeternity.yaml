@@ -1,28 +1,25 @@
 peers: []
+
 http:
   external:
     port: 3013
   internal:
+    debug_endpoints: true
     port: 3113
     listen_address: 0.0.0.0
-    debug_endpoints: true
-
-websocket:
-  channel:
-    listen_address: 0.0.0.0
-    port: 3014
-
-keys:
-  peer_password: "top secret"
-  dir: ./keys
+  endpoints:
+    dry-run: true
 
 chain:
   persist: true
   hard_forks:
     "1": 0
-    "2": 2
-    "3": 4
-    "4": 6
+    "5": 1
+
+websocket:
+  channel:
+    listen_address: 0.0.0.0
+    port: 3014
 
 mining:
   autostart: true
