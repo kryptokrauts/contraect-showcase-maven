@@ -59,7 +59,7 @@
             <targetPackage>com.kryptokrauts.contraect.generated</targetPackage>
             <datatypePackage>com.kryptokrauts.contraect.generated.datatypes</datatypePackage>
             <directories>
-              <directory>${project.basedir}/src/test/resources</directory>
+              <directory>${project.basedir}/src/test/resources/contraects</directory>
             </directories>
             <compilerBaseUrl>http://localhost:3080</compilerBaseUrl>
           </codegen>
