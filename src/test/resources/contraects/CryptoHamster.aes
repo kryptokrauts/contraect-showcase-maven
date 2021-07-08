@@ -1,4 +1,6 @@
-@compiler >= 4
+@compiler >= 6
+
+include "String.aes"
 
 contract CryptoHamster =
    datatype event = NewHamster(indexed int, string, hash)

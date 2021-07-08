@@ -15,7 +15,7 @@
 // PERFORMANCE OF THIS SOFTWARE.
 //
 
-@compiler >= 4
+@compiler >= 6
 
 payable contract PaymentSplitter =
    record state =

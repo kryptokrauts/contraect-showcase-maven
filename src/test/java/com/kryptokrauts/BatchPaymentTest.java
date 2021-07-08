@@ -1,6 +1,6 @@
 package com.kryptokrauts;
 
-import com.kryptokrauts.aeternity.sdk.domain.secret.impl.BaseKeyPair;
+import com.kryptokrauts.aeternity.sdk.domain.secret.KeyPair;
 import com.kryptokrauts.aeternity.sdk.service.account.domain.AccountResult;
 import com.kryptokrauts.aeternity.sdk.service.keypair.KeyPairServiceFactory;
 import com.kryptokrauts.contraect.generated.BatchPayment;
@@ -8,7 +8,6 @@ import com.kryptokrauts.contraect.generated.BatchPayment.Address;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.javatuples.Pair;
 import org.junit.jupiter.api.Assertions;
@@ -20,9 +19,9 @@ public class BatchPaymentTest extends BaseTest {
 
   private static String contractId;
 
-  private static BaseKeyPair recipient1;
-  private static BaseKeyPair recipient2;
-  private static BaseKeyPair recipient3;
+  private static KeyPair recipient1;
+  private static KeyPair recipient2;
+  private static KeyPair recipient3;
 
   @BeforeAll
   public static void deploy() {
@@ -41,27 +40,27 @@ public class BatchPaymentTest extends BaseTest {
     // initialize instance with previously deployed contract
     BatchPayment batchPaymentInstance = new BatchPayment(config, contractId);
 
-    recipient1 = new KeyPairServiceFactory().getService().generateBaseKeyPair();
+    recipient1 = new KeyPairServiceFactory().getService().generateKeyPair();
     BigInteger recipient1Amount = unitConversionService18Decimals.toSmallestUnit("3.6465");
-    recipient2 = new KeyPairServiceFactory().getService().generateBaseKeyPair();
+    recipient2 = new KeyPairServiceFactory().getService().generateKeyPair();
     BigInteger recipient2Amount = unitConversionService18Decimals.toSmallestUnit("8.23424");
-    recipient3 = new KeyPairServiceFactory().getService().generateBaseKeyPair();
+    recipient3 = new KeyPairServiceFactory().getService().generateKeyPair();
     BigInteger recipient3Amount = unitConversionService18Decimals.toSmallestUnit("17.111");
 
     Map<Address, BigInteger> recipientMap = new HashMap<>();
-    recipientMap.put(new Address(recipient1.getPublicKey()), recipient1Amount);
-    recipientMap.put(new Address(recipient2.getPublicKey()), recipient2Amount);
-    recipientMap.put(new Address(recipient3.getPublicKey()), recipient3Amount);
+    recipientMap.put(new Address(recipient1.getAddress()), recipient1Amount);
+    recipientMap.put(new Address(recipient2.getAddress()), recipient2Amount);
+    recipientMap.put(new Address(recipient3.getAddress()), recipient3Amount);
 
     batchPaymentInstance.proceedBatchPayment(recipientMap, getTotalAmount(recipientMap));
 
     // verify accounts got the correct amount of AE
     AccountResult accountResult1 =
-        aeternityService.accounts.blockingGetAccount(Optional.of(recipient1.getPublicKey()));
+        aeternityService.accounts.blockingGetAccount(recipient1.getAddress());
     AccountResult accountResult2 =
-        aeternityService.accounts.blockingGetAccount(Optional.of(recipient2.getPublicKey()));
+        aeternityService.accounts.blockingGetAccount(recipient2.getAddress());
     AccountResult accountResult3 =
-        aeternityService.accounts.blockingGetAccount(Optional.of(recipient3.getPublicKey()));
+        aeternityService.accounts.blockingGetAccount(recipient3.getAddress());
     Assertions.assertEquals(recipient1Amount, accountResult1.getBalance());
     Assertions.assertEquals(recipient2Amount, accountResult2.getBalance());
     Assertions.assertEquals(recipient3Amount, accountResult3.getBalance());
