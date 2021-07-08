@@ -7,7 +7,7 @@ contract AensDelegation =
     stateful entrypoint pre_claim(owner: address, commitment_hash: hash, sig: signature) =
         AENS.preclaim(owner, commitment_hash, signature = sig)
 
-    stateful entrypoint claim(owner: address, name : string, salt: int, name_fee, sig: signature) =
+    stateful entrypoint claim(owner: address, name : string, salt: int, name_fee: int, sig: signature) =
         AENS.claim(owner, name, salt, name_fee, signature = sig)
 
     stateful entrypoint extend(addr: address, name: string, sig: signature, ttl: option(Chain.ttl)) =
