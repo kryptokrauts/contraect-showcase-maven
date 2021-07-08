@@ -39,9 +39,9 @@ public class AensDelegationTest extends BaseTest {
 
   private static AensDelegation aensDelegationInstance;
 
-  private static KeyPair nameOwnerKeyPair;
+  private static DelegationService nameOwnerDelegationService;
 
-  private static DelegationService delegationService;
+  private static DelegationService newOwnerDelegationService;
 
   private static UnitConversionService unitConversionService =
       new DefaultUnitConversionServiceImpl();
@@ -52,7 +52,8 @@ public class AensDelegationTest extends BaseTest {
 
   private static Hash commitmentHash;
 
-  private static Address nameOwnerAddress;
+  private static KeyPair nameOwnerKeyPair, newOwnerKeyPair;
+  private static Address nameOwnerAddress, newOwnerAddress;
 
   private static Signature aensDelegationSignature;
 
@@ -66,11 +67,12 @@ public class AensDelegationTest extends BaseTest {
     log.info("contract id: {}", deployment.getValue1());
     Assertions.assertNotNull(aensDelegationInstance.getContractId());
 
-    // fund name owner keypair
     nameOwnerKeyPair = keyPairService.generateKeyPair();
-    // wrap into Address obj used for contract calls
     nameOwnerAddress = new Address(nameOwnerKeyPair.getAddress());
     log.info(nameOwnerKeyPair.toString());
+    newOwnerKeyPair = keyPairService.generateKeyPair();
+    newOwnerAddress = new Address(newOwnerKeyPair.getAddress());
+    log.info(newOwnerAddress.toString());
 
     AccountResult testAccount = aeternityService.accounts.blockingGetAccount();
     SpendTransactionModel spendTransactionModel =
@@ -84,13 +86,33 @@ public class AensDelegationTest extends BaseTest {
         aeternityService.transactions.blockingPostTransaction(spendTransactionModel);
     log.info("SpendTx result: {}", spendTxResult);
 
+    // the new owner mustn't have zero balance for a successful revocation
+    // see https://github.com/aeternity/aeternity/issues/3674
+    spendTransactionModel =
+        SpendTransactionModel.builder()
+            .amount(unitConversionService.toSmallestUnit("1")) // 1 AE
+            .nonce(testAccount.getNonce().add(BigInteger.valueOf(2)))
+            .recipient(newOwnerKeyPair.getAddress())
+            .sender(config.getKeyPair().getAddress())
+            .build();
+    spendTxResult = aeternityService.transactions.blockingPostTransaction(spendTransactionModel);
+    log.info("SpendTx result: {}", spendTxResult);
+
     // initialize delegation service with correct config
-    delegationService =
+    nameOwnerDelegationService =
         new DelegationServiceFactory()
             .getService(
                 ServiceConfiguration.configure()
                     .network(Network.DEVNET)
                     .keyPair(nameOwnerKeyPair)
+                    .compile());
+
+    newOwnerDelegationService =
+        new DelegationServiceFactory()
+            .getService(
+                ServiceConfiguration.configure()
+                    .network(Network.DEVNET)
+                    .keyPair(newOwnerKeyPair)
                     .compile());
   }
 
@@ -98,10 +120,11 @@ public class AensDelegationTest extends BaseTest {
   @Order(1)
   public void preClaimName() {
     salt = CryptoUtils.generateNamespaceSalt();
-    commitmentHash = new Hash(delegationService.getAensCommitmentHash(delegationTestName, salt));
+    commitmentHash =
+        new Hash(nameOwnerDelegationService.getAensCommitmentHash(delegationTestName, salt));
     Signature preClaimSignature =
         new Signature(
-            delegationService.createAensDelegationSignature(
+            nameOwnerDelegationService.createAensDelegationSignature(
                 aensDelegationInstance.getContractId()));
     log.info("pre-claim delegation signature: {}", preClaimSignature.getSignature());
     log.info("pre-claim name {} with salt {}", delegationTestName, salt);
@@ -115,7 +138,7 @@ public class AensDelegationTest extends BaseTest {
   public void claimName() {
     aensDelegationSignature =
         new Signature(
-            delegationService.createAensDelegationSignature(
+            nameOwnerDelegationService.createAensDelegationSignature(
                 aensDelegationInstance.getContractId(), delegationTestName));
     log.info("aens delegation signature: {}", aensDelegationSignature.getSignature());
     BigInteger nameFee = AENS.getInitialNameFee(delegationTestName);
@@ -172,13 +195,26 @@ public class AensDelegationTest extends BaseTest {
   public void transferName() {
     NameEntryResult nameEntryResult = aeternityService.names.blockingGetNameId(delegationTestName);
     Assertions.assertEquals(nameOwnerKeyPair.getAddress(), nameEntryResult.getOwner());
-    KeyPair newOwnerKeyPair = keyPairService.generateKeyPair();
-    Address newOwnerAddress = new Address(newOwnerKeyPair.getAddress());
     String txHash =
         aensDelegationInstance.transfer(
             nameOwnerAddress, newOwnerAddress, delegationTestName, aensDelegationSignature);
     log.info("transfer tx-hash: {}", txHash);
     nameEntryResult = aeternityService.names.blockingGetNameId(delegationTestName);
     Assertions.assertEquals(newOwnerKeyPair.getAddress(), nameEntryResult.getOwner());
+  }
+
+  @Test
+  @Order(6)
+  public void revokeName() {
+    Signature newOwnerDelegationSignature =
+        new Signature(
+            newOwnerDelegationService.createAensDelegationSignature(
+                aensDelegationInstance.getContractId(), delegationTestName));
+    String txHash =
+        aensDelegationInstance.revoke(
+            newOwnerAddress, delegationTestName, newOwnerDelegationSignature);
+    log.info("revoke tx-hash: {}", txHash);
+    NameEntryResult nameEntryResult = aeternityService.names.blockingGetNameId(delegationTestName);
+    Assertions.assertTrue(nameEntryResult.getRootErrorMessage().contains("Name revoked"));
   }
 }
