@@ -79,7 +79,7 @@ public class OracleDelegationTest extends BaseTest {
     String signature =
         delegationService.createOracleDelegationSignature(oracleDelegationInstance.getContractId());
     Pair<String, Oracle> oracleRegisterTx =
-        oracleDelegationInstance.signedRegisterOracle(
+        oracleDelegationInstance.register_oracle(
             new Address(oracleKeyPair.getAddress()),
             new Signature(signature),
             BigInteger.ONE,
@@ -100,7 +100,7 @@ public class OracleDelegationTest extends BaseTest {
     String signature =
         delegationService.createOracleDelegationSignature(oracleDelegationInstance.getContractId());
     String oracleExtendTxHash =
-        oracleDelegationInstance.signedExtendOracle(
+        oracleDelegationInstance.extend_oracle(
             oracle, new Signature(signature), "RelativeTTL(800)", BigInteger.ZERO);
     log.info("tx-hash of signedExtendOracle: {}", oracleExtendTxHash);
     RegisteredOracleResult registeredOracleResult =
@@ -114,10 +114,10 @@ public class OracleDelegationTest extends BaseTest {
   @Test
   @Order(3)
   public void createAndRespondToQuery() {
-    BigInteger queryFee = oracleDelegationInstance.queryFee(oracle);
+    BigInteger queryFee = oracleDelegationInstance.query_fee(oracle);
     log.info("query fee: {}", queryFee);
     Pair<String, Oracle_query> createQueryTx =
-        oracleDelegationInstance.createQuery(
+        oracleDelegationInstance.create_query(
             oracle,
             "how is the wheather over there?",
             "RelativeTTL(100)",
@@ -129,7 +129,7 @@ public class OracleDelegationTest extends BaseTest {
         delegationService.createOracleDelegationSignature(
             oracleDelegationInstance.getContractId(), query.getOracle_query());
     String signedRespondTxHash =
-        oracleDelegationInstance.signedRespond(oracle, query, new Signature(signature), "sunny =)");
+        oracleDelegationInstance.respond(oracle, query, new Signature(signature), "sunny =)");
     log.info("tx-hash of signedRespond: {}", signedRespondTxHash);
     OracleQueryResult oracleQueryResult =
         aeternityService.oracles.blockingGetOracleQuery(

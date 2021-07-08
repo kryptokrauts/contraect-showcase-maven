@@ -148,7 +148,7 @@ public class AensDelegationTest extends BaseTest {
   }
 
   @Disabled // currently not working =>
-            // https://github.com/kryptokrauts/contraect-maven-plugin/issues/65
+  // https://github.com/kryptokrauts/contraect-maven-plugin/issues/65
   @Test
   @Order(4)
   public void addAndGetPointers() {
@@ -165,5 +165,20 @@ public class AensDelegationTest extends BaseTest {
     Map<String, Object> pointers = aensDelegationInstance.get_pointers(delegationTestName);
     Assertions.assertEquals(1, pointers.size());
     Assertions.assertEquals(nameOwnerAddress.getAddress(), pointers.get(AENS.POINTER_KEY_ACCOUNT));
+  }
+
+  @Test
+  @Order(5)
+  public void transferName() {
+    NameEntryResult nameEntryResult = aeternityService.names.blockingGetNameId(delegationTestName);
+    Assertions.assertEquals(nameOwnerKeyPair.getAddress(), nameEntryResult.getOwner());
+    KeyPair newOwnerKeyPair = keyPairService.generateKeyPair();
+    Address newOwnerAddress = new Address(newOwnerKeyPair.getAddress());
+    String txHash =
+        aensDelegationInstance.transfer(
+            nameOwnerAddress, newOwnerAddress, delegationTestName, aensDelegationSignature);
+    log.info("transfer tx-hash: {}", txHash);
+    nameEntryResult = aeternityService.names.blockingGetNameId(delegationTestName);
+    Assertions.assertEquals(newOwnerKeyPair.getAddress(), nameEntryResult.getOwner());
   }
 }
