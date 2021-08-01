@@ -134,8 +134,6 @@ public class OracleDelegationTest extends BaseTest {
     OracleQueryResult oracleQueryResult =
         aeternityService.oracles.blockingGetOracleQuery(
             oracleKeyPair.getOracleAddress(), query.getOracle_query());
-    // TODO https://github.com/kryptokrauts/aepp-sdk-java/issues/170
-    //    Assertions.assertEquals(
-    //        "sunny =)", EncodingUtils.decodeCheckWithIdentifier(oracleQueryResult.getResponse()));
+    Assertions.assertEquals("sunny =)", oracleQueryResult.getResponse());
   }
 }
