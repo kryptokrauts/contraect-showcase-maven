@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 public class SimpleContractTest extends BaseTest {
 
   @Test
-  public void createAndVerifyHamster() {
+  public void deployment() {
     SimpleContract sc = new SimpleContract(config, null);
     String contractId = sc.deploy().getValue1();
     new SimpleContract(config, contractId, true);
