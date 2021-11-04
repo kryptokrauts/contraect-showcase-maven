@@ -38,7 +38,7 @@ public class BaseTest {
             .compilerBaseUrl("http://localhost:3080")
             .baseUrl("http://localhost")
             .network(Network.DEVNET)
-            .indaexBaseUrl("http://localhost:4000")
+            .mdwBaseUrl("http://localhost:4000")
             .keyPair(baseKeyPair)
             .targetVM(VirtualMachine.FATE)
             .millisBetweenTrailsToWaitForConfirmation(100l)
