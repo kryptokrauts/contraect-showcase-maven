@@ -1,0 +1,129 @@
+@compiler >= 6
+
+include "Option.aes"
+include "String.aes"
+
+contract SimpleGAMultiSig =
+
+  datatype event
+    = TxProposed(string, hash, address, int)
+    | TxConfirmed(hash, address)
+    | TxConsensusReached(hash)
+    | TxAuthorized(hash)
+    | TxRevoked(hash, address)
+
+  record transaction = 
+    { unsigned_tx : string,
+      tx_hash : hash,
+      expires_at : int,
+      proposed_by : address,
+      confirmed_by : list(address) }
+
+  record state = 
+  	{ multisig_users : list(address),
+  	  confirmations_required : int,    
+      current_tx : option(transaction) }
+
+  stateful entrypoint init(p_confirmations_required : int, p_multisig_users : list(address)) = 
+    { multisig_users = p_multisig_users, 
+  	  confirmations_required = p_confirmations_required,
+  	  current_tx = None }
+
+  // GA authorize function
+  stateful entrypoint authorize() : bool =  
+    require(is_authorized(Call.caller), "ERROR_NOT_AUTHORIZED")	    
+    switch(is_expired())
+      true => 
+        abort("ERROR_TX_EXPIRED")
+      false => 
+        require(has_consensus(), "ERROR_NO_CONSENSUS")
+        switch(Auth.tx_hash)
+          None => abort("ERROR_NO_AUTH_CONTEXT")
+          Some(tx_hash) =>
+            require(tx_hash == Option.force(state.current_tx).tx_hash, "ERROR_UNEQUAL_HASHES")
+            Chain.event(TxAuthorized(tx_hash))        
+            true
+  
+  // get current tx hash to proceed or none if none was proposed or last expired
+  entrypoint current_tx() : option(transaction) = 
+  	state.current_tx
+    
+  // propose a new tx valid for the given ttl
+  stateful entrypoint propose(unsigned_tx : string, tx_hash : hash, ttl : Chain.ttl) =
+    require(is_authorized(Call.caller), "ERROR_NOT_AUTHORIZED")
+    switch(state.current_tx)
+      None => set_current_tx(unsigned_tx, tx_hash, ttl)
+      Some(tx) => 
+        switch(is_expired())
+          false => abort("ERROR_TX_ALREADY_PROPOSED")
+          true => set_current_tx(unsigned_tx, tx_hash, ttl)
+  
+  // signer confirms tx
+  stateful entrypoint confirm(tx_hash : hash) = 
+    require(is_authorized(Call.caller), "ERROR_NOT_AUTHORIZED") 
+    switch(state.current_tx)
+      None => abort("ERROR_NOTHING_TO_CONFIRM")
+      Some(tx) =>
+        require(!is_expired(), "ERROR_TX_ALREADY_EXPIRED")
+        require(tx.tx_hash == tx_hash, "ERROR_GIVEN_TX_HASH_INVALID")
+        switch(List.contains(Call.caller, tx.confirmed_by))          
+          false => 
+            let updated_tx = tx{confirmed_by=Call.caller :: tx.confirmed_by}
+            put(state{current_tx=Some(updated_tx)})
+            Chain.event(TxConfirmed(updated_tx.tx_hash, Call.caller))
+            switch(has_consensus())
+              true => Chain.event(TxConsensusReached(updated_tx.tx_hash))
+  
+  // check if given address is within the list of multisig_users
+  entrypoint is_authorized(addr : address) : bool =
+    List.contains(addr, state.multisig_users)
+
+  // revoke the current tx and clean state
+  stateful entrypoint revoke(tx_hash : hash) =
+    switch(state.current_tx)
+      None => abort("ERROR_NOTHING_TO_REVOKE")
+      Some(tx) =>
+        require(tx.tx_hash == tx_hash, "ERROR_WRONG_TX_TO_REVOKE")
+        require(tx.proposed_by == Call.caller, "ERROR_NOT_AUTHORIZED")
+        put(state{current_tx = None})
+        Chain.event(TxRevoked(tx_hash, Call.caller))
+
+  // validate if enough signers have confirmed
+  entrypoint has_consensus() : bool = 
+    switch(state.current_tx)
+      None => false
+      Some(tx) => List.length(tx.confirmed_by) >= state.confirmations_required
+
+  // get the list of current confirmations of confirmations_required
+  entrypoint get_consensus_state() : option(int * int) =
+    switch(state.current_tx)
+      None => None
+      Some(tx) => Some((List.length(tx.confirmed_by), state.confirmations_required))
+  	
+  // check if current_tx is already expired
+  function is_expired() : bool =
+    switch(state.current_tx)
+      None => true
+      Some(tx) => Chain.block_height > tx.expires_at
+
+  // set current tx to state and emit new proposed event
+  stateful function set_current_tx(p_unsigned_tx : string, p_tx_hash : hash, ttl : Chain.ttl) =
+    let new_tx = { unsigned_tx = p_unsigned_tx,
+                   tx_hash = p_tx_hash,
+                   expires_at = expiration_height(ttl),
+                   proposed_by = Call.caller,
+                   confirmed_by = [Call.caller] } 
+    put(state{current_tx = Some(new_tx)})
+    Chain.event(TxProposed(new_tx.unsigned_tx, new_tx.tx_hash, new_tx.proposed_by, new_tx.expires_at))
+
+  // compute the expiration height depending on the ttl type
+  function expiration_height(ttl : Chain.ttl) : int =
+    switch(ttl)
+      FixedTTL(height) => height
+      RelativeTTL(relative_ttl) => Chain.block_height + relative_ttl
+
+   // @TODO: DELETE AFTER TESTING
+  entrypoint get_state() =
+  	state
+
+  // Question: howto update the ga contract with consensus of all signers (i.e. change confirmations required, add or delete signers)?

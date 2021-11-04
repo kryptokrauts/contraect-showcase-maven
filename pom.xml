@@ -10,8 +10,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.target>1.8</maven.compiler.target>
-    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>15</maven.compiler.target>
+    <maven.compiler.source>15</maven.compiler.source>
   </properties>
 
   <dependencies>
@@ -61,7 +61,7 @@
             <directories>
               <directory>${project.basedir}/src/test/resources/contraects</directory>
             </directories>
-            <compilerBaseUrl>http://localhost:3080</compilerBaseUrl>
+            <compilerBaseUrl>https://compiler.aeternity.io</compilerBaseUrl>
           </codegen>
         </configuration>
         <executions>

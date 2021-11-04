@@ -37,16 +37,17 @@ public class BaseTest {
         AeternityServiceConfiguration.configure()
             .compilerBaseUrl("http://localhost:3080")
             .baseUrl("http://localhost")
-            .network(Network.DEVNET)
-            .indaexBaseUrl("http://localhost:4000")
+            .network(Network.LOCAL_IRIS_NETWORK)
+            .mdwBaseUrl("http://localhost:4000")
             .keyPair(baseKeyPair)
             .targetVM(VirtualMachine.FATE)
             .millisBetweenTrailsToWaitForConfirmation(100l)
             .compile();
     aeternityService = new AeternityServiceFactory().getService(config);
+    initTestNet();
   }
 
-  private static void initTestNet() {
+  protected static void initTestNet() {
     config =
         AeternityServiceConfiguration.configure()
             .compilerBaseUrl(BaseConstants.DEFAULT_TESTNET_COMPILER_URL)

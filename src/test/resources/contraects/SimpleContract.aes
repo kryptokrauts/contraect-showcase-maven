@@ -26,3 +26,6 @@ payable contract SimpleContract =
 
    entrypoint getOwner() : address =
       state.owner
+      
+   entrypoint testTimestamp() : int =
+    	Chain.timestamp
