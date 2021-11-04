@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.javatuples.Pair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -113,6 +114,7 @@ public class OracleDelegationTest extends BaseTest {
 
   @Test
   @Order(3)
+  @Disabled // see https://github.com/kryptokrauts/aepp-sdk-java/issues/170
   public void createAndRespondToQuery() {
     BigInteger queryFee = oracleDelegationInstance.query_fee(oracle);
     log.info("query fee: {}", queryFee);
