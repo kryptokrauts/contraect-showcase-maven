@@ -1,0 +1,170 @@
+@compiler >= 6
+
+include "List.aes"
+include "Option.aes"
+
+contract SophiaTypes =
+
+    record company =
+      {  ceo: address,
+         shareholders: map(address, int),
+         employees: list(employee),
+         location: companyAddress }
+    
+    record companyAddress =
+      {  zip: int,
+         street: string,
+         city: string }
+
+    record employee =
+      {  address: address,
+         firstname: string,
+         lastname: string }
+         
+    record complexType = 
+      {  test: option(list(int)),
+      	 test2: option(map(string, int)),
+      	 test3: (int * bool),
+      	 test4: (string * int * int)}
+      	 	
+    entrypoint testTimestamp() : int =
+    	Chain.timestamp
+ 
+    entrypoint testMapOfMaps(mapofmaps: map(int, map(int, int))) : map(int, map(int, int)) =
+ 		mapofmaps
+ 		
+    entrypoint testUnit(param : int) : unit =
+    	require(param > 0, "Positive Integer required")
+    
+    entrypoint testHash(hashValue: hash) : hash =
+        hashValue
+    
+    entrypoint testBytes(bytesValue: bytes(4)) : bytes(4) =
+        bytesValue
+    
+    stateful payable entrypoint testPayableString(stringValue: string) : string =
+        stringValue
+    
+    entrypoint testListListMap(mapValue: list(list(map(int, int)))) : list(list(map(int, int))) =
+        mapValue
+    
+    entrypoint testCompanyAddress(companyAddressValue: companyAddress) : companyAddress =
+        companyAddressValue
+        
+    entrypoint testCompany(companyValue: company) : company =
+        companyValue
+        
+    entrypoint testEmployee(employeeValue: employee) : employee =
+        employeeValue
+       
+    entrypoint testSingle(singleValue: int) : (int) =        
+        singleValue
+        
+    entrypoint testTuple(tupleValue: int * bool) : (int * bool) =
+        tupleValue
+         
+    entrypoint testInt(intValue: int) : int =
+    	//Library.inc(intValue)
+        intValue
+
+    entrypoint testAddress(addressValue: address) : address =
+        addressValue
+
+    entrypoint testBool(boolValue: bool) : bool =
+        boolValue
+
+    entrypoint testBits(bitsValue: bits) : bits =
+        bitsValue
+
+    entrypoint testString(stringValue: string) : string =
+        stringValue
+        
+    entrypoint testListString(listStringValue: list(string)) : list(string) =
+        listStringValue
+
+    entrypoint testListInt(listIntValue: list(int)) : list(int) =
+    	List.is_empty(listIntValue)
+        listIntValue
+
+    entrypoint testListAddressInt(listAddressIntValue: list(address * int)) : list(address * int) =
+        listAddressIntValue
+
+    entrypoint testCompanyRecord(companyRecordValue: company) : company =
+        companyRecordValue
+    
+    entrypoint testMapStringAddress(mapStringAddressValue: map(string, address)) : map(string, address) =
+        mapStringAddressValue
+
+    entrypoint testOption(optionValue: option(int)) : option(int) =
+        optionValue
+        
+    entrypoint testOptionStr(optionValue: option(string)) : option(string) =
+        optionValue
+        
+    entrypoint testOptionList(optionValue: option(list(int))) : option(list(int)) =
+        optionValue
+
+    entrypoint testSignature(signatureValue: signature) : signature =
+        signatureValue
+        
+    entrypoint testOracle(oracle: oracle(string, int)) : oracle(string, int) =
+    	oracle
+    
+    entrypoint testOracleQuery(oracle_query: oracle_query(string, string)) : oracle_query(string, string) =
+    	oracle_query
+    	
+    entrypoint testComplexRecord() : complexType =
+    	let complexReturnValue = {
+    	 test = Some([1,2,3]),
+      	 test2 = Some({["hallo"]=3,["jiojio"]=90832}),
+      	 test3 = (42,true),
+      	 test4 = ("wurst",42,12) }
+      	complexReturnValue
+
+    stateful entrypoint testStatefulUnit(value : int) : unit =
+ 		()
+
+    stateful entrypoint testIntStateful(intValue: int) : int =
+        intValue
+
+    stateful entrypoint testAddressStateful(addressValue: address) : address =
+        addressValue
+
+    stateful entrypoint testBoolStateful(boolValue: bool) : bool =
+        boolValue
+
+    stateful entrypoint testBitsStateful(bitsValue: bits) : bits =
+        bitsValue
+
+    stateful entrypoint testBytesStateful(bytesValue: bytes(64)) : bytes(64) =
+        bytesValue
+
+    entrypoint testStringStateful(stringValue: string) : string =
+        stringValue
+
+    stateful entrypoint testListIntStateful(listIntValue: list(int)) : list(int) =
+        listIntValue
+
+    stateful entrypoint testListAddressIntStateful(listAddressIntValue: list(address * int)) : list(address * int) =
+        listAddressIntValue
+
+    stateful entrypoint testCompanyRecordStateful(companyRecordValue: company) : company =
+        companyRecordValue
+    
+    stateful entrypoint testMapStringAddressStateful(mapStringAddressValue: map(string, address)) : map(string, address) =
+        mapStringAddressValue
+
+    stateful entrypoint testOptionStateful(optionValue: option('a)) : option('a) =
+        optionValue
+
+    stateful entrypoint testHashStateful(hashValue: hash) : hash =
+        hashValue
+
+    stateful entrypoint testSignatureStateful(signatureValue: signature) : signature =
+        signatureValue
+    
+    entrypoint testTtl(ttl : Chain.ttl) : Chain.ttl =
+    	ttl
+        
+    stateful entrypoint testStatefulTtl(ttl : Chain.ttl) : Chain.ttl =
+    	ttl

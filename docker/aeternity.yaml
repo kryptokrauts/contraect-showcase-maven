@@ -1,20 +1,14 @@
-peers: []
+peers: [ ]
 
 http:
   external:
     port: 3013
   internal:
-    debug_endpoints: true
     port: 3113
     listen_address: 0.0.0.0
+    debug_endpoints: true
   endpoints:
     dry-run: true
-
-chain:
-  persist: true
-  hard_forks:
-    "1": 0
-    "5": 1
 
 websocket:
   channel:
@@ -33,7 +27,7 @@ mining:
       edge_bits: 15
 
 fork_management:
-  network_id: ae_devnet
+  network_id: local_iris_testnet
 
 logging:
   level: debug

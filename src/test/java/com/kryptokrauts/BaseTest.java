@@ -42,9 +42,9 @@ public class BaseTest {
             .keyPair(baseKeyPair)
             .targetVM(VirtualMachine.FATE)
             .millisBetweenTrailsToWaitForConfirmation(100l)
+            .useZeroAddressAccountForDryRun(false)
             .compile();
     aeternityService = new AeternityServiceFactory().getService(config);
-    initTestNet();
   }
 
   protected static void initTestNet() {

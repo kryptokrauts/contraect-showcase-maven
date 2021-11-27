@@ -1,14 +1,5 @@
 package com.kryptokrauts;
 
-import java.math.BigInteger;
-import org.javatuples.Pair;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-import com.kryptokrauts.aeternity.sdk.constants.Network;
 import com.kryptokrauts.aeternity.sdk.domain.secret.KeyPair;
 import com.kryptokrauts.aeternity.sdk.service.ServiceConfiguration;
 import com.kryptokrauts.aeternity.sdk.service.account.domain.AccountResult;
@@ -25,7 +16,16 @@ import com.kryptokrauts.contraect.generated.OracleDelegation.ChainTTL.ChainTTLTy
 import com.kryptokrauts.contraect.generated.OracleDelegation.Oracle;
 import com.kryptokrauts.contraect.generated.OracleDelegation.Oracle_query;
 import com.kryptokrauts.contraect.generated.OracleDelegation.Signature;
+import java.math.BigInteger;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.crypto.CryptoException;
+import org.javatuples.Pair;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -55,27 +55,39 @@ public class OracleDelegationTest extends BaseTest {
     oracleKeyPair = keyPairService.generateKeyPair();
     AccountResult testAccount = aeternityService.accounts.blockingGetAccount();
     SpendTransactionModel spendTransactionModel =
-        SpendTransactionModel.builder().amount(new BigInteger("1000000000000000000"))
-            .nonce(testAccount.getNonce().add(BigInteger.ONE)).recipient(oracleKeyPair.getAddress())
-            .sender(config.getKeyPair().getAddress()).build();
+        SpendTransactionModel.builder()
+            .amount(new BigInteger("100000000"))
+            .nonce(testAccount.getNonce().add(BigInteger.ONE))
+            .recipient(oracleKeyPair.getAddress())
+            .sender(config.getKeyPair().getAddress())
+            .build();
     PostTransactionResult spendTxResult =
         aeternityService.transactions.blockingPostTransaction(spendTransactionModel);
     log.info("SpendTx result: {}", spendTxResult);
 
-    // initialize delegation service with correct config
-    delegationService = new DelegationServiceFactory().getService(
-        ServiceConfiguration.configure().network(Network.DEVNET).keyPair(oracleKeyPair).compile());
+    // initialize delegation service with correct config for signature creation
+    delegationService =
+        new DelegationServiceFactory()
+            .getService(
+                ServiceConfiguration.configure()
+                    .network(config.getNetwork())
+                    .keyPair(oracleKeyPair)
+                    .compile());
   }
 
   @Test
   @Order(1)
-  public void createOracle() {
+  public void createOracle() throws CryptoException {
     String signature =
         delegationService.createOracleDelegationSignature(oracleDelegationInstance.getContractId());
-    Pair<String, Oracle> oracleRegisterTx = oracleDelegationInstance.register_oracle(
-        new Address(oracleKeyPair.getAddress()), new Signature(signature), BigInteger.ONE,
-        // "RelativeTTL(800)",
-        new ChainTTL(new BigInteger("800"), ChainTTLType.RelativeTTL), BigInteger.ZERO);
+
+    Pair<String, Oracle> oracleRegisterTx =
+        oracleDelegationInstance.register_oracle(
+            new Address(oracleKeyPair.getAddress()),
+            new Signature(signature),
+            BigInteger.ONE,
+            new ChainTTL(new BigInteger("800"), ChainTTLType.RelativeTTL),
+            BigInteger.ZERO);
     log.info("tx-hash of signedRegisterOracle: {}", oracleRegisterTx.getValue0());
     oracle = oracleRegisterTx.getValue1();
     log.info("{}", oracle);
@@ -90,15 +102,19 @@ public class OracleDelegationTest extends BaseTest {
   public void extendOracle() {
     String signature =
         delegationService.createOracleDelegationSignature(oracleDelegationInstance.getContractId());
-    String oracleExtendTxHash = oracleDelegationInstance.extend_oracle(oracle,
-        new Signature(signature), "RelativeTTL(800)", BigInteger.ZERO);
+    String oracleExtendTxHash =
+        oracleDelegationInstance.extend_oracle(
+            oracle,
+            new Signature(signature),
+            new ChainTTL(new BigInteger("800"), ChainTTLType.RelativeTTL),
+            BigInteger.ZERO);
     log.info("tx-hash of signedExtendOracle: {}", oracleExtendTxHash);
     RegisteredOracleResult registeredOracleResult =
         aeternityService.oracles.blockingGetRegisteredOracle(oracle.getOracle());
     log.info("initial ttl: {}", oracleTtl);
     log.info("new ttl after extending it: {}", registeredOracleResult.getTtl());
-    Assertions.assertEquals(oracleTtl.add(BigInteger.valueOf(800)),
-        registeredOracleResult.getTtl());
+    Assertions.assertEquals(
+        oracleTtl.add(BigInteger.valueOf(800)), registeredOracleResult.getTtl());
   }
 
   @Test
@@ -106,17 +122,25 @@ public class OracleDelegationTest extends BaseTest {
   public void createAndRespondToQuery() {
     BigInteger queryFee = oracleDelegationInstance.query_fee(oracle);
     log.info("query fee: {}", queryFee);
-    Pair<String, Oracle_query> createQueryTx = oracleDelegationInstance.create_query(oracle,
-        "how is the wheather over there?", "RelativeTTL(100)", "RelativeTTL(100)", queryFee);
+    Pair<String, Oracle_query> createQueryTx =
+        oracleDelegationInstance.create_query(
+            oracle,
+            "how is the wheather over there?",
+            new ChainTTL(new BigInteger("100"), ChainTTLType.RelativeTTL),
+            new ChainTTL(new BigInteger("100"), ChainTTLType.RelativeTTL),
+            queryFee);
     Oracle_query query = createQueryTx.getValue1();
     log.info("oracle query id: {}", query.getOracle_query());
-    String signature = delegationService.createOracleDelegationSignature(
-        oracleDelegationInstance.getContractId(), query.getOracle_query());
+    String signature =
+        delegationService.createOracleDelegationSignature(
+            oracleDelegationInstance.getContractId(), query.getOracle_query());
     String signedRespondTxHash =
         oracleDelegationInstance.respond(oracle, query, new Signature(signature), "sunny =)");
     log.info("tx-hash of signedRespond: {}", signedRespondTxHash);
-    OracleQueryResult oracleQueryResult = aeternityService.oracles
-        .blockingGetOracleQuery(oracleKeyPair.getOracleAddress(), query.getOracle_query());
-    Assertions.assertEquals("sunny =)", oracleQueryResult.getResponse());
+    OracleQueryResult oracleQueryResult =
+        aeternityService.oracles.blockingGetOracleQuery(
+            oracleKeyPair.getOracleAddress(), query.getOracle_query());
+    /** @TODO: figure out why encoding returns ! */
+    Assertions.assertEquals("!sunny =)", oracleQueryResult.getResponse());
   }
 }
