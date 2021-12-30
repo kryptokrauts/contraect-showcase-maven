@@ -21,7 +21,6 @@ import com.kryptokrauts.aeternity.sdk.service.transaction.type.model.ContractCal
 import com.kryptokrauts.aeternity.sdk.service.transaction.type.model.GeneralizedAccountsAttachTransactionModel;
 import com.kryptokrauts.aeternity.sdk.service.transaction.type.model.GeneralizedAccountsMetaTransactionModel;
 import com.kryptokrauts.aeternity.sdk.service.transaction.type.model.SpendTransactionModel;
-import com.kryptokrauts.aeternity.sdk.util.ByteUtils;
 import com.kryptokrauts.aeternity.sdk.util.EncodingUtils;
 import com.kryptokrauts.aeternity.sdk.util.SigningUtil;
 import io.reactivex.Single;
@@ -96,8 +95,10 @@ public class GAContractTest extends BaseTest {
           r -> {
             assertEquals("revert", r.getContractCallObject().getReturnType());
             assertEquals(
-                "{abort=[ERROR_TX_ALREADY_EXPIRED]}",
-                decodeCallResult("confirm", r.getContractCallObject()).toString());
+                "{abort:[ERROR_TX_ALREADY_EXPIRED]}",
+                decodeCallResult("confirm", r.getContractCallObject())
+                    .toString()
+                    .replace("\"", ""));
           });
 
     } catch (Exception e) {
@@ -118,8 +119,10 @@ public class GAContractTest extends BaseTest {
           r -> {
             assertEquals("revert", r.getContractCallObject().getReturnType());
             assertEquals(
-                "{abort=[ERROR_NOT_AUTHORIZED]}",
-                decodeCallResult("confirm", r.getContractCallObject()).toString());
+                "{abort:[ERROR_NOT_AUTHORIZED]}",
+                decodeCallResult("confirm", r.getContractCallObject())
+                    .toString()
+                    .replace("\"", ""));
           });
 
     } catch (Exception e) {
@@ -140,8 +143,10 @@ public class GAContractTest extends BaseTest {
           r -> {
             assertEquals("revert", r.getContractCallObject().getReturnType());
             assertEquals(
-                "{abort=[ERROR_ALREADY_CONFIRMED]}",
-                decodeCallResult("confirm", r.getContractCallObject()).toString());
+                "{abort:[ERROR_ALREADY_CONFIRMED]}",
+                decodeCallResult("confirm", r.getContractCallObject())
+                    .toString()
+                    .replace("\"", ""));
           });
 
     } catch (Exception e) {
@@ -163,8 +168,10 @@ public class GAContractTest extends BaseTest {
           r -> {
             assertEquals("revert", r.getContractCallObject().getReturnType());
             assertEquals(
-                "{abort=[ERROR_A_TX_IS_ALREADY_PROPOSED]}",
-                decodeCallResult("propose", r.getContractCallObject()).toString());
+                "{abort:[ERROR_A_TX_IS_ALREADY_PROPOSED]}",
+                decodeCallResult("propose", r.getContractCallObject())
+                    .toString()
+                    .replace("\"", ""));
           });
 
     } catch (Exception e) {
@@ -556,15 +563,6 @@ public class GAContractTest extends BaseTest {
         aeternityService.transactions.blockingCreateUnsignedTransaction(spendTxModel).getResult();
 
     // create the ga transaction hash with the spendTx as payload
-    byte[] networkDataWithAdditionalPrefix =
-        (config.getNetwork().getId()).getBytes(StandardCharsets.UTF_8);
-    byte[] txAndNetwork =
-        ByteUtils.concatenate(
-            networkDataWithAdditionalPrefix,
-            EncodingUtils.decodeCheckWithIdentifier(unsignedSpendTx));
-
-    // String gaTxHash = new String(Hex.encode(EncodingUtils.hash(txAndNetwork)));
-
     String gaTxHash = aeternityService.transactions.computeGAInnerTxHash(spendTxModel);
 
     log.info(
