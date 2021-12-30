@@ -243,7 +243,7 @@ public class GAContractTest extends BaseTest {
         aeternityService.accounts.blockingGetAccount(generalizedAccount.getAddress());
 
     BigInteger gas = BigInteger.valueOf(800000);
-    BigInteger gasPrice = BigInteger.valueOf(BaseConstants.MINIMAL_GAS_PRICE);
+    BigInteger gasPrice = BaseConstants.MINIMAL_GAS_PRICE;
 
     String signer_addresses =
         "[" + signers.stream().map(s -> s.getAddress()).collect(Collectors.joining(",")) + "]";
@@ -265,7 +265,7 @@ public class GAContractTest extends BaseTest {
             .authFun(EncodingUtils.generateAuthFunHash("authorize"))
             .callData(callData)
             .code(getCode())
-            .gas(gas)
+            .gasLimit(gas)
             .gasPrice(gasPrice)
             .nonce(getNextNonce(generalizedAccount.getAddress()))
             .ownerId(gaAccountResult.getPublicKey())
@@ -286,7 +286,7 @@ public class GAContractTest extends BaseTest {
     gaAttachTx =
         gaAttachTx
             .toBuilder()
-            .gas(dryRunResult.getContractCallObject().getGasUsed())
+            .gasLimit(dryRunResult.getContractCallObject().getGasUsed())
             .gasPrice(dryRunResult.getContractCallObject().getGasPrice())
             .build();
 
@@ -314,9 +314,9 @@ public class GAContractTest extends BaseTest {
     ContractCallTransactionModel contractCallModel =
         ContractCallTransactionModel.builder()
             .callData(callData)
-            .gas(BigInteger.valueOf(1579000l))
+            .gasLimit(BigInteger.valueOf(1579000l))
             .contractId(getGAContractAddress())
-            .gasPrice(BigInteger.valueOf(BaseConstants.MINIMAL_GAS_PRICE))
+            .gasPrice(BaseConstants.MINIMAL_GAS_PRICE)
             .amount(BigInteger.ZERO)
             .nonce(getNextNonce(config.getKeyPair().getAddress()))
             .callerId(config.getKeyPair().getAddress())
@@ -429,8 +429,8 @@ public class GAContractTest extends BaseTest {
           ContractCallTransactionModel.builder()
               .callData(callData)
               .contractId(getGAContractAddress())
-              .gasPrice(BigInteger.valueOf(BaseConstants.MINIMAL_GAS_PRICE))
-              .gas(BigInteger.valueOf(1000000))
+              .gasPrice(BaseConstants.MINIMAL_GAS_PRICE)
+              .gasLimit(BigInteger.valueOf(1000000))
               .nonce(getNextNonce(signer.getAddress()))
               .callerId(signer.getAddress())
               .ttl(BigInteger.ZERO)
@@ -452,7 +452,7 @@ public class GAContractTest extends BaseTest {
       contractCallModel =
           contractCallModel
               .toBuilder()
-              .gas(dryRunResult.getContractCallObject().getGasUsed())
+              .gasLimit(dryRunResult.getContractCallObject().getGasUsed())
               .build();
 
       blockingPostTx(contractCallModel, signer.getEncodedPrivateKey());
@@ -498,8 +498,8 @@ public class GAContractTest extends BaseTest {
         ContractCallTransactionModel.builder()
             .contractId(getGAContractAddress())
             .callData(callData)
-            .gas(BigInteger.valueOf(1000000))
-            .gasPrice(BigInteger.valueOf(BaseConstants.MINIMAL_GAS_PRICE))
+            .gasLimit(BigInteger.valueOf(1000000))
+            .gasPrice(BaseConstants.MINIMAL_GAS_PRICE)
             .nonce(getNextNonce(keyPair.getAddress()))
             .callerId(keyPair.getAddress())
             .ttl(BigInteger.ZERO)
@@ -523,7 +523,7 @@ public class GAContractTest extends BaseTest {
     proposeTx =
         proposeTx
             .toBuilder()
-            .gas(contractCallObjectModel.getGasUsed())
+            .gasLimit(contractCallObjectModel.getGasUsed())
             .gasPrice(contractCallObjectModel.getGasPrice())
             .build();
 
@@ -563,7 +563,9 @@ public class GAContractTest extends BaseTest {
             networkDataWithAdditionalPrefix,
             EncodingUtils.decodeCheckWithIdentifier(unsignedSpendTx));
 
-    String gaTxHash = new String(Hex.encode(EncodingUtils.hash(txAndNetwork)));
+    // String gaTxHash = new String(Hex.encode(EncodingUtils.hash(txAndNetwork)));
+
+    String gaTxHash = aeternityService.transactions.computeGAInnerTxHash(spendTxModel);
 
     log.info(
         "\nSpend transaction to send amount of {} aettos to recipient {}\nUnsigned Spend Tx: {}\nGATxHash: {}",

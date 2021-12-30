@@ -17,6 +17,8 @@ import com.kryptokrauts.contraect.generated.AensDelegation.Address;
 import com.kryptokrauts.contraect.generated.AensDelegation.ChainTTL;
 import com.kryptokrauts.contraect.generated.AensDelegation.ChainTTL.ChainTTLType;
 import com.kryptokrauts.contraect.generated.AensDelegation.Hash;
+import com.kryptokrauts.contraect.generated.AensDelegation.Pointee;
+import com.kryptokrauts.contraect.generated.AensDelegation.Pointee.PointeeType;
 import com.kryptokrauts.contraect.generated.AensDelegation.Signature;
 import java.math.BigInteger;
 import java.util.Map;
@@ -26,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.javatuples.Pair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -172,8 +173,6 @@ public class AensDelegationTest extends BaseTest {
     Assertions.assertEquals(newTtlHeight, newTtl);
   }
 
-  @Disabled // currently not working =>
-  // https://github.com/kryptokrauts/contraect-maven-plugin/issues/65
   @Test
   @Order(4)
   public void addAndGetPointers() {
@@ -181,15 +180,16 @@ public class AensDelegationTest extends BaseTest {
         nameOwnerAddress,
         delegationTestName,
         AENS.POINTER_KEY_ACCOUNT,
-        nameOwnerAddress.getAddress(),
+        new Pointee(nameOwnerAddress, PointeeType.AccountPt),
         aensDelegationSignature);
     NameEntryResult nameEntryResult = aeternityService.names.blockingGetNameId(delegationTestName);
     Assertions.assertEquals(1, nameEntryResult.getPointers().size());
     Assertions.assertEquals(
         nameOwnerAddress.getAddress(), nameEntryResult.getAccountPointer().get());
-    Map<String, Object> pointers = aensDelegationInstance.get_pointers(delegationTestName);
+    aensDelegationInstance.get_name(delegationTestName);
+    Map<String, Pointee> pointers = aensDelegationInstance.get_pointers(delegationTestName);
     Assertions.assertEquals(1, pointers.size());
-    Assertions.assertEquals(nameOwnerAddress.getAddress(), pointers.get(AENS.POINTER_KEY_ACCOUNT));
+    Assertions.assertEquals(nameOwnerAddress, pointers.get(AENS.POINTER_KEY_ACCOUNT).getAddress());
   }
 
   @Test

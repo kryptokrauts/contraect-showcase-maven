@@ -1,6 +1,5 @@
 package com.kryptokrauts;
 
-import com.kryptokrauts.aeternity.sdk.constants.BaseConstants;
 import com.kryptokrauts.aeternity.sdk.constants.Network;
 import com.kryptokrauts.aeternity.sdk.constants.VirtualMachine;
 import com.kryptokrauts.aeternity.sdk.domain.secret.KeyPair;
@@ -37,22 +36,8 @@ public class BaseTest {
         AeternityServiceConfiguration.configure()
             .compilerBaseUrl("http://localhost:3080")
             .baseUrl("http://localhost")
-            .network(Network.LOCAL_IRIS_NETWORK)
+            .network(Network.DEVNET)
             .mdwBaseUrl("http://localhost:4000")
-            .keyPair(baseKeyPair)
-            .targetVM(VirtualMachine.FATE)
-            .millisBetweenTrailsToWaitForConfirmation(100l)
-            .useZeroAddressAccountForDryRun(false)
-            .compile();
-    aeternityService = new AeternityServiceFactory().getService(config);
-  }
-
-  protected static void initTestNet() {
-    config =
-        AeternityServiceConfiguration.configure()
-            .compilerBaseUrl(BaseConstants.DEFAULT_TESTNET_COMPILER_URL)
-            .baseUrl(BaseConstants.DEFAULT_TESTNET_URL)
-            .network(Network.TESTNET)
             .keyPair(baseKeyPair)
             .targetVM(VirtualMachine.FATE)
             .millisBetweenTrailsToWaitForConfirmation(100l)
