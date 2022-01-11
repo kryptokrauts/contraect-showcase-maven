@@ -47,7 +47,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @Slf4j
-public class GAContractTest extends BaseTest {
+public class GAMultiSigTest extends BaseTest {
 
   private static int NUM_TRIALS_DEFAULT = 20;
 

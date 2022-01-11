@@ -2,7 +2,7 @@
 
 include "Option.aes"
 
-contract AensDelegation =
+contract AENSDelegation =
 
     stateful entrypoint pre_claim(owner: address, commitment_hash: hash, sig: signature) =
         AENS.preclaim(owner, commitment_hash, signature = sig)

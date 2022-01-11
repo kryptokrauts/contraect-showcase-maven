@@ -12,14 +12,14 @@ import com.kryptokrauts.aeternity.sdk.service.transaction.type.model.SpendTransa
 import com.kryptokrauts.aeternity.sdk.service.unit.UnitConversionService;
 import com.kryptokrauts.aeternity.sdk.service.unit.impl.DefaultUnitConversionServiceImpl;
 import com.kryptokrauts.aeternity.sdk.util.CryptoUtils;
-import com.kryptokrauts.contraect.generated.AensDelegation;
-import com.kryptokrauts.contraect.generated.AensDelegation.Address;
-import com.kryptokrauts.contraect.generated.AensDelegation.ChainTTL;
-import com.kryptokrauts.contraect.generated.AensDelegation.ChainTTL.ChainTTLType;
-import com.kryptokrauts.contraect.generated.AensDelegation.Hash;
-import com.kryptokrauts.contraect.generated.AensDelegation.Pointee;
-import com.kryptokrauts.contraect.generated.AensDelegation.Pointee.PointeeType;
-import com.kryptokrauts.contraect.generated.AensDelegation.Signature;
+import com.kryptokrauts.contraect.generated.AENSDelegation;
+import com.kryptokrauts.contraect.generated.AENSDelegation.Address;
+import com.kryptokrauts.contraect.generated.AENSDelegation.ChainTTL;
+import com.kryptokrauts.contraect.generated.AENSDelegation.ChainTTL.ChainTTLType;
+import com.kryptokrauts.contraect.generated.AENSDelegation.Hash;
+import com.kryptokrauts.contraect.generated.AENSDelegation.Pointee;
+import com.kryptokrauts.contraect.generated.AENSDelegation.Pointee.PointeeType;
+import com.kryptokrauts.contraect.generated.AENSDelegation.Signature;
 import java.math.BigInteger;
 import java.util.Map;
 import java.util.Optional;
@@ -35,11 +35,11 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class AensDelegationTest extends BaseTest {
+public class AENSDelegationTest extends BaseTest {
 
   private static Random random = new Random();
 
-  private static AensDelegation aensDelegationInstance;
+  private static AENSDelegation aensDelegationInstance;
 
   private static DelegationService nameOwnerDelegationService;
 
@@ -61,7 +61,7 @@ public class AensDelegationTest extends BaseTest {
 
   @BeforeAll
   public static void deployAndFund() {
-    aensDelegationInstance = new AensDelegation(config, null);
+    aensDelegationInstance = new AENSDelegation(config, null);
     // deploy contract
     Pair<String, String> deployment = aensDelegationInstance.deploy();
     String txHash = deployment.getValue0();
