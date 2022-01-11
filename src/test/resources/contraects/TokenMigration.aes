@@ -1,0 +1,23 @@
+contract TokenMigration =
+
+    /*
+    token_amount - the amount of tokens that the user will migrate
+    ae_address - aeternity account address to whom the tokens will be transferred
+    leaf_index - the index of the leaf in the merkle tree, needed to calculate the root_hash
+    siblings - the siblings of the leaf, needed to calculate the root_hash,
+    sig - the eth signature, which should contain the aeternity address as a message.
+    */
+    stateful entrypoint migrate         : (int, address, int, list(string), bytes(65))  => int
+
+    /*
+    eth_addr - the ethereum address that holds the old AE tokens
+    token_amount - the amount of tokens that the user will migrate
+    leaf_index - the index of the leaf in the merkle tree, needed to calculate the root_hash
+    siblings - the siblings of the leaf, needed to calculate the root_hash
+    */
+    entrypoint contained_in_merkle_tree : (string, int, int, list(string))              => bool
+
+    entrypoint balance                  : ()                                            => int
+    entrypoint root_hash                : ()                                            => string
+    entrypoint migrations_count         : ()                                            => int
+    entrypoint is_migrated              : string                                        => bool

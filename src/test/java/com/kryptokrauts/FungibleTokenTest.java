@@ -1,6 +1,6 @@
 package com.kryptokrauts;
 
-import com.kryptokrauts.aeternity.sdk.domain.secret.impl.BaseKeyPair;
+import com.kryptokrauts.aeternity.sdk.domain.secret.KeyPair;
 import com.kryptokrauts.contraect.generated.FungibleToken;
 import com.kryptokrauts.contraect.generated.FungibleToken.Meta_info;
 import com.kryptokrauts.contraect.generated.FungibleTokenInterface;
@@ -59,7 +59,7 @@ public class FungibleTokenTest extends BaseTest {
 
     // verify that owner owns all tokens
     BigInteger ownerBalance =
-        krautTokenInstance.balance(new FungibleToken.Address(baseKeyPair.getPublicKey())).get();
+        krautTokenInstance.balance(new FungibleToken.Address(baseKeyPair.getAddress())).get();
     Assertions.assertEquals(KRAUT_TOKEN_TOTAL_SUPPLY, ownerBalance);
   }
 
@@ -72,29 +72,27 @@ public class FungibleTokenTest extends BaseTest {
         unitConversionService18Decimals.toSmallestUnit(new BigDecimal("1.337"));
 
     // send 1.337 KRAUT to new account
-    BaseKeyPair recipientKeyPair = keyPairService.generateBaseKeyPair();
+    KeyPair recipientAccount = keyPairService.generateKeyPair();
     krautTokenInstance.transfer(
-        new FungibleToken.Address(recipientKeyPair.getPublicKey()), tokensToSendAettos);
+        new FungibleToken.Address(recipientAccount.getAddress()), tokensToSendAettos);
 
     // verify new balance of recipient
     BigInteger recipientBalance =
-        krautTokenInstance
-            .balance(new FungibleToken.Address(recipientKeyPair.getPublicKey()))
-            .get();
+        krautTokenInstance.balance(new FungibleToken.Address(recipientAccount.getAddress())).get();
     Assertions.assertEquals(tokensToSendAettos, recipientBalance);
 
     log.info(krautTokenInstance.balances().toString());
 
     // verify new balance of owner
     BigInteger ownerBalance =
-        krautTokenInstance.balance(new FungibleToken.Address(baseKeyPair.getPublicKey())).get();
+        krautTokenInstance.balance(new FungibleToken.Address(baseKeyPair.getAddress())).get();
     log.info(ownerBalance.toString());
     Assertions.assertEquals(KRAUT_TOKEN_TOTAL_SUPPLY.subtract(tokensToSendAettos), ownerBalance);
 
     // verify that a fresh account doesn't own a token
     Optional<BigInteger> noKRAUTlerBalance =
         krautTokenInstance.balance(
-            new FungibleToken.Address(keyPairService.generateBaseKeyPair().getPublicKey()));
+            new FungibleToken.Address(keyPairService.generateKeyPair().getAddress()));
     log.info(noKRAUTlerBalance.toString());
     Assertions.assertEquals(Optional.empty().toString(), noKRAUTlerBalance.toString());
   }

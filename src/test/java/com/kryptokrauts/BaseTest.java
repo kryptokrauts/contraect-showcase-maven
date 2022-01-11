@@ -2,7 +2,7 @@ package com.kryptokrauts;
 
 import com.kryptokrauts.aeternity.sdk.constants.Network;
 import com.kryptokrauts.aeternity.sdk.constants.VirtualMachine;
-import com.kryptokrauts.aeternity.sdk.domain.secret.impl.BaseKeyPair;
+import com.kryptokrauts.aeternity.sdk.domain.secret.KeyPair;
 import com.kryptokrauts.aeternity.sdk.service.aeternity.AeternityServiceConfiguration;
 import com.kryptokrauts.aeternity.sdk.service.aeternity.AeternityServiceFactory;
 import com.kryptokrauts.aeternity.sdk.service.aeternity.impl.AeternityService;
@@ -20,7 +20,7 @@ public class BaseTest {
   protected static UnitConversionService unitConversionService18Decimals =
       new DefaultUnitConversionServiceImpl();
 
-  protected static BaseKeyPair baseKeyPair;
+  protected static KeyPair baseKeyPair;
 
   protected static AeternityServiceConfiguration config;
 
@@ -31,13 +31,14 @@ public class BaseTest {
   @BeforeAll
   public static void init() {
     KeyPairService keyPairService = new KeyPairServiceFactory().getService();
-    baseKeyPair = keyPairService.generateBaseKeyPairFromSecret(PRIVATE_KEY);
+    baseKeyPair = keyPairService.recoverKeyPair(PRIVATE_KEY);
     config =
         AeternityServiceConfiguration.configure()
             .compilerBaseUrl("http://localhost:3080")
             .baseUrl("http://localhost")
-            .baseKeyPair(baseKeyPair)
             .network(Network.DEVNET)
+            .mdwBaseUrl("http://localhost:4000")
+            .keyPair(baseKeyPair)
             .targetVM(VirtualMachine.FATE)
             .millisBetweenTrailsToWaitForConfirmation(100l)
             .compile();

@@ -1,0 +1,26 @@
+contract AENSUpdate =
+  stateful entrypoint update_name(owner : address, name : string, s : signature) =
+    let p1 : AENS.pointee = AENS.AccountPt(Call.caller)
+    let p2 : AENS.pointee = AENS.OraclePt(Call.caller)
+    let p3 : AENS.pointee = AENS.ContractPt(Call.caller)
+    let p4 : AENS.pointee = AENS.ChannelPt(Call.caller)
+    AENS.update(owner, name, None, None,
+                Some({ ["account_pubkey"] = p1, ["oracle_pubkey"] = p2,
+                       ["contract_pubkey"] = p3, ["misc"] = p4 }), signature = s)
+
+  stateful entrypoint preclaim(addr  : address, chash : hash, s : signature) : unit =
+    AENS.preclaim(addr, chash,signature=s)
+
+  stateful entrypoint claim(addr : address, name : string, salt : int, name_fee : int, s : signature) : unit =
+    AENS.claim(addr, name, salt, name_fee, signature = s)
+    
+  entrypoint get_aens(name : string) : option(AENS.name) =
+  	AENS.lookup(name)
+  	
+  entrypoint get_pointee(name : string, pointee_key : string) : option(AENS.pointee) =
+  	switch(AENS.lookup(name))
+  		Some(AENS.Name(owner, FixedTTL(expiry), ptrs)) => Map.lookup(pointee_key, ptrs)
+  	
+  stateful entrypoint updatePointee(addr : address, name : string, key : string, pointee : AENS.pointee, s : signature) =
+  	AENS.update(addr, name, None, None,
+    			Some({ [key] = pointee }), signature = s) 
