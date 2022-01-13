@@ -42,7 +42,7 @@ All the contracts and tests are good examples to get started but following tests
     - can potentially be used to create an AENS marketplace
 - [FungibleTokenTest](src/test/java/com/kryptokrauts/FungibleTokenTest.java)
     - shows how to deploy and use an [AEX-9](https://github.com/aeternity/AEXs/blob/master/AEXS/aex-9.md) compliant fungible token
-- [GAMultiSigTest](src/test/java/com/kryptokrauts/GAMultiSigTest.java)
+- [SimpleGAMultiSigTest](src/test/java/com/kryptokrauts/SimpleGAMultiSigTest.java)
     - showcases the [Generalized Accounts](https://aeternity.com/protocol/generalized_accounts/ga_explained.html) feature with a simple MultiSig account
 - [OracleDelegation](src/test/java/com/kryptokrauts/OracleDelegationTest.java)
     - showcases how to delegate [Oracle](https://aeternity.com/protocol/oracles/index.html) control to a smart contract

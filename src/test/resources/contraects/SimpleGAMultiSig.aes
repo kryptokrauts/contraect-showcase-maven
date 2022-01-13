@@ -45,7 +45,6 @@ contract SimpleGAMultiSig =
         abort("ERROR_TX_EXPIRED")
       false =>
         require(has_consensus(), "ERROR_NO_CONSENSUS")
-        true
         switch(Auth.tx_hash)
           None => abort("ERROR_NO_AUTH_CONTEXT")
           Some(ga_tx_hash) =>

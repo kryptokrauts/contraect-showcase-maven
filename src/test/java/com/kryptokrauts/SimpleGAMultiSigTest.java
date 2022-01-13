@@ -47,11 +47,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @Slf4j
-public class GAMultiSigTest extends BaseTest {
+public class SimpleGAMultiSigTest extends BaseTest {
 
   private static int NUM_TRIALS_DEFAULT = 20;
 
-  private static final String GA_CONTRACT_NAME = "GAMultiSig.aes";
+  private static final String GA_CONTRACT_NAME = "SimpleGAMultiSig.aes";
 
   private static final int DEFAULT_TTL = 200;
 
@@ -249,7 +249,7 @@ public class GAMultiSigTest extends BaseTest {
     AccountResult gaAccountResult =
         aeternityService.accounts.blockingGetAccount(generalizedAccount.getAddress());
 
-    BigInteger gas = BigInteger.valueOf(800000);
+    BigInteger gasLimit = BigInteger.valueOf(800000);
     BigInteger gasPrice = BaseConstants.MINIMAL_GAS_PRICE;
 
     String signer_addresses =
@@ -272,7 +272,7 @@ public class GAMultiSigTest extends BaseTest {
             .authFun(EncodingUtils.generateAuthFunHash("authorize"))
             .callData(callData)
             .code(getCode())
-            .gasLimit(gas)
+            .gasLimit(gasLimit)
             .gasPrice(gasPrice)
             .nonce(getNextNonce(generalizedAccount.getAddress()))
             .ownerId(gaAccountResult.getPublicKey())
