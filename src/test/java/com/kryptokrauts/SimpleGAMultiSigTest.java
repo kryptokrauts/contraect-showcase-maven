@@ -4,20 +4,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.google.common.collect.ImmutableMap;
-import com.kryptokrauts.aeternity.sdk.constants.BaseConstants;
 import com.kryptokrauts.aeternity.sdk.domain.StringResultWrapper;
 import com.kryptokrauts.aeternity.sdk.domain.secret.KeyPair;
+import com.kryptokrauts.aeternity.sdk.domain.sophia.SophiaChainTTL;
+import com.kryptokrauts.aeternity.sdk.domain.sophia.SophiaChainTTL.Type;
+import com.kryptokrauts.aeternity.sdk.domain.sophia.SophiaHash;
+import com.kryptokrauts.aeternity.sdk.domain.sophia.SophiaSignature;
 import com.kryptokrauts.aeternity.sdk.service.account.domain.AccountResult;
 import com.kryptokrauts.aeternity.sdk.service.info.domain.TransactionResult;
-import com.kryptokrauts.aeternity.sdk.service.transaction.domain.ContractCallObjectModel;
+import com.kryptokrauts.aeternity.sdk.service.transaction.domain.ContractTxOptions;
+import com.kryptokrauts.aeternity.sdk.service.transaction.domain.ContractTxResult;
 import com.kryptokrauts.aeternity.sdk.service.transaction.domain.DryRunAccountModel;
 import com.kryptokrauts.aeternity.sdk.service.transaction.domain.DryRunRequest;
 import com.kryptokrauts.aeternity.sdk.service.transaction.domain.DryRunTransactionResult;
 import com.kryptokrauts.aeternity.sdk.service.transaction.domain.DryRunTransactionResults;
 import com.kryptokrauts.aeternity.sdk.service.transaction.domain.PostTransactionResult;
 import com.kryptokrauts.aeternity.sdk.service.transaction.type.model.AbstractTransactionModel;
-import com.kryptokrauts.aeternity.sdk.service.transaction.type.model.ContractCallTransactionModel;
 import com.kryptokrauts.aeternity.sdk.service.transaction.type.model.GeneralizedAccountsAttachTransactionModel;
 import com.kryptokrauts.aeternity.sdk.service.transaction.type.model.GeneralizedAccountsMetaTransactionModel;
 import com.kryptokrauts.aeternity.sdk.service.transaction.type.model.SpendTransactionModel;
@@ -33,9 +35,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -63,123 +63,6 @@ public class SimpleGAMultiSigTest extends BaseTest {
   private String gaTxHash;
   private SpendTransactionModel spendTxModel;
 
-  @Test
-  public void testGASuccessCase() throws Throwable {
-    try {
-      /** First Signer proposes and automatically confirms */
-      this.proposeSpendTransaction(gaTxHash, DEFAULT_TTL, signers.get(0));
-
-      /** All other signers confirm */
-      IntStream.range(1, numToSign).forEach(i -> this.confirmSigner(gaTxHash, signers.get(i)));
-
-      /** Signer 2 calls Auth function (GAMeta tx) */
-      this.callAuthFunction(gaTxHash, spendTxModel, signers.get(1));
-
-      /** check recipients balance */
-      assertEquals(amountToSpend, getAccount(spendTxRecipient.getAddress()).getBalance());
-    } catch (Exception e) {
-      log.error("Error testing generalized accounts spend tx success case: " + e);
-      fail(e);
-    }
-  }
-
-  @Test
-  public void testGAFailProposedTxExpired() throws Throwable {
-    try {
-      /** First Signer proposes and automatically confirms */
-      this.proposeSpendTransaction(gaTxHash, 5, signers.get(0));
-
-      this.confirmSigner(
-          gaTxHash,
-          signers.get(1),
-          r -> {
-            assertEquals("revert", r.getContractCallObject().getReturnType());
-            assertEquals(
-                "{abort:[ERROR_TX_ALREADY_EXPIRED]}",
-                decodeCallResult("confirm", r.getContractCallObject())
-                    .toString()
-                    .replace("\"", ""));
-          });
-
-    } catch (Exception e) {
-      log.error("Error testing generalized accounts spend tx success case: " + e);
-      fail(e);
-    }
-  }
-
-  @Test
-  public void testGAFailConfirmNotAuthorized() throws Throwable {
-    try {
-      /** First Signer proposes and automatically confirms */
-      this.proposeSpendTransaction(gaTxHash, DEFAULT_TTL, signers.get(0));
-
-      this.confirmSigner(
-          gaTxHash,
-          config.getKeyPair(),
-          r -> {
-            assertEquals("revert", r.getContractCallObject().getReturnType());
-            assertEquals(
-                "{abort:[ERROR_NOT_AUTHORIZED]}",
-                decodeCallResult("confirm", r.getContractCallObject())
-                    .toString()
-                    .replace("\"", ""));
-          });
-
-    } catch (Exception e) {
-      log.error("Error testing generalized accounts spend tx success case: " + e);
-      fail(e);
-    }
-  }
-
-  @Test
-  public void testGAFailAlreadyConfirmed() throws Throwable {
-    try {
-      /** First Signer proposes and automatically confirms */
-      this.proposeSpendTransaction(gaTxHash, DEFAULT_TTL, signers.get(0));
-
-      this.confirmSigner(
-          gaTxHash,
-          signers.get(0),
-          r -> {
-            assertEquals("revert", r.getContractCallObject().getReturnType());
-            assertEquals(
-                "{abort:[ERROR_ALREADY_CONFIRMED]}",
-                decodeCallResult("confirm", r.getContractCallObject())
-                    .toString()
-                    .replace("\"", ""));
-          });
-
-    } catch (Exception e) {
-      log.error("Error testing generalized accounts spend tx success case: " + e);
-      fail(e);
-    }
-  }
-
-  @Test
-  public void testGAFailAlreadyProposed() throws Throwable {
-    try {
-      /** First Signer proposes and automatically confirms */
-      this.proposeSpendTransaction(gaTxHash, DEFAULT_TTL, signers.get(0));
-
-      this.proposeSpendTransaction(
-          gaTxHash,
-          DEFAULT_TTL,
-          signers.get(0),
-          r -> {
-            assertEquals("revert", r.getContractCallObject().getReturnType());
-            assertEquals(
-                "{abort:[ERROR_A_TX_IS_ALREADY_PROPOSED]}",
-                decodeCallResult("propose", r.getContractCallObject())
-                    .toString()
-                    .replace("\"", ""));
-          });
-
-    } catch (Exception e) {
-      log.error("Error testing generalized accounts spend tx success case: " + e);
-      fail(e);
-    }
-  }
-
   @BeforeEach
   public void prepareForTest() {
     try {
@@ -200,6 +83,86 @@ public class SimpleGAMultiSigTest extends BaseTest {
       spendTxModel = tx.getValue1();
     } catch (Throwable e) {
       log.error("Error preparing test", e);
+      fail(e);
+    }
+  }
+
+  @Test
+  public void testGASuccessCase() throws Throwable {
+    try {
+      /** First Signer proposes and automatically confirms */
+      this.proposeSpendTransaction(gaTxHash, DEFAULT_TTL, signers.get(0));
+
+      /** All other signers confirm */
+      IntStream.range(1, numToSign).forEach(i -> this.confirmSigner(gaTxHash, signers.get(i)));
+
+      /** Signer 2 calls Auth function (GAMeta tx) */
+      this.callAuthFunction(spendTxModel, signers.get(1));
+
+      /** check recipients balance */
+      assertEquals(amountToSpend, getAccount(spendTxRecipient.getAddress()).getBalance());
+    } catch (Exception e) {
+      log.error("Error testing generalized accounts spend tx success case: " + e);
+      fail(e);
+    }
+  }
+
+  @Test
+  public void testGAFailProposedTxExpired() throws Throwable {
+    try {
+      /** First Signer proposes and automatically confirms */
+      this.proposeSpendTransaction(gaTxHash, 5, signers.get(0));
+
+      this.confirmSigner(gaTxHash, signers.get(1), "{\"abort\":[\"ERROR_TX_ALREADY_EXPIRED\"]}");
+
+    } catch (Exception e) {
+      log.error("Error testing generalized accounts spend tx success case: " + e);
+      fail(e);
+    }
+  }
+
+  @Test
+  public void testGAFailConfirmNotAuthorized() throws Throwable {
+    try {
+      /** First Signer proposes and automatically confirms */
+      this.proposeSpendTransaction(gaTxHash, DEFAULT_TTL, signers.get(0));
+
+      this.confirmSigner(gaTxHash, config.getKeyPair(), "{\"abort\":[\"ERROR_NOT_AUTHORIZED\"]}");
+
+    } catch (Exception e) {
+      log.error("Error testing generalized accounts spend tx success case: " + e);
+      fail(e);
+    }
+  }
+
+  @Test
+  public void testGAFailAlreadyConfirmed() throws Throwable {
+    try {
+      /** First Signer proposes and automatically confirms */
+      this.proposeSpendTransaction(gaTxHash, DEFAULT_TTL, signers.get(0));
+
+      this.confirmSigner(gaTxHash, signers.get(0), "{\"abort\":[\"ERROR_ALREADY_CONFIRMED\"]}");
+
+    } catch (Exception e) {
+      log.error("Error testing generalized accounts spend tx success case: " + e);
+      fail(e);
+    }
+  }
+
+  @Test
+  public void testGAFailAlreadyProposed() throws Throwable {
+    try {
+      /** First Signer proposes and automatically confirms */
+      this.proposeSpendTransaction(gaTxHash, DEFAULT_TTL, signers.get(0));
+
+      this.proposeSpendTransaction(
+          gaTxHash,
+          DEFAULT_TTL,
+          signers.get(0),
+          "{\"abort\":[\"ERROR_A_TX_IS_ALREADY_PROPOSED\"]}");
+
+    } catch (Exception e) {
+      log.error("Error testing generalized accounts spend tx success case: " + e);
       fail(e);
     }
   }
@@ -243,14 +206,9 @@ public class SimpleGAMultiSigTest extends BaseTest {
    * @throws Throwable
    */
   private void attachGA() throws Throwable {
-
     log.info("Creating ga attach transaction");
-
     AccountResult gaAccountResult =
         aeternityService.accounts.blockingGetAccount(generalizedAccount.getAddress());
-
-    BigInteger gasLimit = BigInteger.valueOf(800000);
-    BigInteger gasPrice = BaseConstants.MINIMAL_GAS_PRICE;
 
     String signer_addresses =
         "[" + signers.stream().map(s -> s.getAddress()).collect(Collectors.joining(",")) + "]";
@@ -272,8 +230,6 @@ public class SimpleGAMultiSigTest extends BaseTest {
             .authFun(EncodingUtils.generateAuthFunHash("authorize"))
             .callData(callData)
             .code(getCode())
-            .gasLimit(gasLimit)
-            .gasPrice(gasPrice)
             .nonce(getNextNonce(generalizedAccount.getAddress()))
             .ownerId(gaAccountResult.getPublicKey())
             .build();
@@ -309,43 +265,10 @@ public class SimpleGAMultiSigTest extends BaseTest {
    * @return
    */
   private String getContractNonce() {
-
-    String callData =
-        aeternityService
-            .compiler
-            .blockingEncodeCalldata(
-                getContractCode(), "get_nonce", new LinkedList<>(), ImmutableMap.of())
-            .getResult();
-    assertNotNull(callData);
-
-    ContractCallTransactionModel contractCallModel =
-        ContractCallTransactionModel.builder()
-            .callData(callData)
-            .gasLimit(BigInteger.valueOf(1579000l))
-            .contractId(getGAContractAddress())
-            .gasPrice(BaseConstants.MINIMAL_GAS_PRICE)
-            .amount(BigInteger.ZERO)
-            .nonce(getNextNonce(config.getKeyPair().getAddress()))
-            .callerId(config.getKeyPair().getAddress())
-            .ttl(BigInteger.ZERO)
-            .virtualMachine(config.getTargetVM())
-            .build();
-
-    DryRunTransactionResults dryRunResults =
-        aeternityService.transactions.blockingDryRunTransactions(
-            DryRunRequest.builder()
-                .build()
-                .transactionInputItem(contractCallModel)
-                .account(
-                    DryRunAccountModel.builder()
-                        .publicKey(config.getKeyPair().getAddress())
-                        .build()));
-    DryRunTransactionResult dryRunResult = dryRunResults.getResults().get(0);
-
-    Object resultObject = decodeCallResult("get_nonce", dryRunResult.getContractCallObject());
-
+    Object resultObject =
+        aeternityService.transactions.blockingReadOnlyContractCall(
+            getGAContractAddress(), "get_nonce", getContractCode());
     log.debug("Current gaContract nonce is: {}", resultObject);
-
     return resultObject.toString();
   }
 
@@ -364,17 +287,15 @@ public class SimpleGAMultiSigTest extends BaseTest {
   /**
    * use the GA Meta function calling contracts auth entrypoint
    *
-   * @param gaTxHash
    * @param spendTxModel
    * @throws Throwable
    */
-  private void callAuthFunction(String gaTxHash, SpendTransactionModel spendTxModel, KeyPair caller)
+  private void callAuthFunction(SpendTransactionModel spendTxModel, KeyPair caller)
       throws Throwable {
     /** Call GAMeta tx */
     log.info("{} calls authentication function", caller.getAddress());
 
-    List<String> paramList =
-        List.of(getSignature(gaTxHash, generalizedAccount), getContractNonce());
+    List<String> paramList = List.of(getContractNonce());
     log.debug("Using parameters for call authorize: {}", paramList);
 
     String callData =
@@ -415,56 +336,28 @@ public class SimpleGAMultiSigTest extends BaseTest {
    * @param signer
    * @throws Throwable
    */
-  private void confirmSigner(
-      String gaTxHash, KeyPair signer, Consumer<DryRunTransactionResult> assertCheck) {
+  private void confirmSigner(String gaTxHash, KeyPair signer, String expectedErrorMessage) {
     try {
       log.info(
           "Calling confirm ga tx with parameters\nSigner: {}\nGA Tx hash: {}",
           signer.getAddress(),
           gaTxHash);
 
-      List<String> params = Arrays.asList(getSignature(gaTxHash, signer), getContractNonce());
-
-      String callData =
-          aeternityService
-              .compiler
-              .blockingEncodeCalldata(getContractCode(), "confirm", params, ImmutableMap.of())
-              .getResult();
-      assertNotNull(callData);
-
-      ContractCallTransactionModel contractCallModel =
-          ContractCallTransactionModel.builder()
-              .callData(callData)
-              .contractId(getGAContractAddress())
-              .gasPrice(BaseConstants.MINIMAL_GAS_PRICE)
-              .gasLimit(BigInteger.valueOf(1000000))
-              .nonce(getNextNonce(signer.getAddress()))
-              .callerId(signer.getAddress())
-              .ttl(BigInteger.ZERO)
-              .build();
-
-      DryRunTransactionResults dryRunResults =
-          aeternityService.transactions.blockingDryRunTransactions(
-              DryRunRequest.builder()
-                  .build()
-                  .transactionInputItem(contractCallModel)
-                  .account(
-                      DryRunAccountModel.builder()
-                          .publicKey(config.getKeyPair().getAddress())
-                          .build()));
-      DryRunTransactionResult dryRunResult = dryRunResults.getResults().get(0);
-
-      assertDryRunCallSuccessful(dryRunResults.getResults().get(0), "confirm", assertCheck);
-
-      contractCallModel =
-          contractCallModel
-              .toBuilder()
-              .gasLimit(dryRunResult.getContractCallObject().getGasUsed())
-              .build();
-
-      blockingPostTx(contractCallModel, signer.getEncodedPrivateKey());
-
-      log.info("Signer {} successfully confirmed proposed spend tx", signer.getAddress());
+      List<Object> params = Arrays.asList(getSignature(gaTxHash, signer), getContractNonce());
+      ContractTxResult txResult =
+          aeternityService.transactions.blockingStatefulContractCall(
+              getGAContractAddress(),
+              "confirm",
+              getContractCode(),
+              ContractTxOptions.builder().params(params).customKeyPair(signer).build());
+      log.info("ContractTxResult: " + txResult);
+      if (expectedErrorMessage != null) {
+        assertEquals("revert", txResult.getCallResult().getReturnType());
+        assertEquals(expectedErrorMessage, txResult.getDecodedValue().toString());
+      } else {
+        assertEquals("ok", txResult.getCallResult().getReturnType());
+        log.info("Signer {} successfully confirmed proposed spend tx", signer.getAddress());
+      }
     } catch (Throwable e) {
       fail("Error confirming proposed tx for signer " + signer.getAddress(), e);
     }
@@ -476,68 +369,35 @@ public class SimpleGAMultiSigTest extends BaseTest {
   }
 
   private void proposeSpendTransaction(
-      String gaTxHash,
-      int relativeTtl,
-      KeyPair keyPair,
-      Consumer<DryRunTransactionResult> assertCheck)
+      String gaTxHash, int relativeTtl, KeyPair keyPair, String expectedErrorMessage)
       throws Throwable {
     /** Call propose using the spend tx */
     log.info(
-        "Calling propose spend tx with parameters\nGATxHash: {}\nTTL: {}", gaTxHash, relativeTtl);
+        "Calling propose spendTx with parameters\nGATxHash: {}\nTTL: {}", gaTxHash, relativeTtl);
 
-    List<String> paramList =
-        Arrays.asList(
-            "#" + gaTxHash,
-            "RelativeTTL(" + relativeTtl + ")",
-            getSignature(gaTxHash, keyPair),
-            getContractNonce());
-    log.debug("Using parameters for call propose: {}", paramList);
+    ContractTxResult txResult =
+        aeternityService.transactions.blockingStatefulContractCall(
+            getGAContractAddress(),
+            "propose",
+            getContractCode(),
+            ContractTxOptions.builder()
+                .params(
+                    List.of(
+                        new SophiaHash(gaTxHash),
+                        new SophiaChainTTL(BigInteger.valueOf(relativeTtl), Type.RelativeTTL),
+                        new SophiaSignature(getSignature(gaTxHash, keyPair)),
+                        getContractNonce()))
+                .customKeyPair(keyPair)
+                .build());
+    log.info("Tx result of propose spendTx is: {}", txResult);
 
-    String callData =
-        aeternityService
-            .compiler
-            .blockingEncodeCalldata(getContractCode(), "propose", paramList, Collections.emptyMap())
-            .getResult();
-
-    assertNotNull(callData);
-
-    ContractCallTransactionModel proposeTx =
-        ContractCallTransactionModel.builder()
-            .contractId(getGAContractAddress())
-            .callData(callData)
-            .gasLimit(BigInteger.valueOf(1000000))
-            .gasPrice(BaseConstants.MINIMAL_GAS_PRICE)
-            .nonce(getNextNonce(keyPair.getAddress()))
-            .callerId(keyPair.getAddress())
-            .ttl(BigInteger.ZERO)
-            .build();
-    DryRunTransactionResults dryRunResults =
-        aeternityService.transactions.blockingDryRunTransactions(
-            DryRunRequest.builder()
-                .build()
-                .transactionInputItem(
-                    aeternityService
-                        .transactions
-                        .blockingCreateUnsignedTransaction(proposeTx)
-                        .getResult())
-                .account(DryRunAccountModel.builder().publicKey(keyPair.getAddress()).build()));
-
-    assertDryRunCallSuccessful(dryRunResults.getResults().get(0), "propose", assertCheck);
-
-    ContractCallObjectModel contractCallObjectModel =
-        dryRunResults.getResults().get(0).getContractCallObject();
-
-    proposeTx =
-        proposeTx
-            .toBuilder()
-            .gasLimit(contractCallObjectModel.getGasUsed())
-            .gasPrice(contractCallObjectModel.getGasPrice())
-            .build();
-
-    PostTransactionResult proposeResult =
-        this.blockingPostTx(proposeTx, keyPair.getEncodedPrivateKey());
-
-    log.info("Post transaction result of propose spendTx is: {}", proposeResult);
+    if (expectedErrorMessage != null) {
+      assertEquals("revert", txResult.getCallResult().getReturnType());
+      assertEquals(expectedErrorMessage, txResult.getDecodedValue().toString());
+    } else {
+      assertEquals("ok", txResult.getCallResult().getReturnType());
+      log.info("Signer {} successfully proposed spend tx", keyPair.getAddress());
+    }
   }
 
   /**
@@ -580,34 +440,6 @@ public class SimpleGAMultiSigTest extends BaseTest {
     return "#" + Hex.toHexString(SigningUtil.sign(hash, keypair.getEncodedPrivateKey()));
   }
 
-  private Object decodeCallResult(
-      String function, ContractCallObjectModel contractCallObjectModel) {
-    return aeternityService
-        .compiler
-        .blockingDecodeCallResult(
-            getContractCode(),
-            function,
-            contractCallObjectModel.getReturnType(),
-            contractCallObjectModel.getReturnValue(),
-            null)
-        .getResult();
-  }
-
-  private void assertDryRunCallSuccessful(
-      DryRunTransactionResult dryRunResult,
-      String method,
-      Consumer<DryRunTransactionResult> assertCheck) {
-    assertEquals("ok", dryRunResult.getResult());
-    if (assertCheck == null) {
-      assertEquals(
-          "ok",
-          dryRunResult.getContractCallObject().getReturnType(),
-          decodeCallResult(method, dryRunResult.getContractCallObject()).toString());
-    } else {
-      assertCheck.accept(dryRunResult);
-    }
-  }
-
   private String getCode() throws Exception {
     StringResultWrapper resultWrapper =
         aeternityService.compiler.blockingCompile(getContractCode(), null, null);
@@ -639,7 +471,6 @@ public class SimpleGAMultiSigTest extends BaseTest {
             .amount(amount)
             .sender(baseKeyPair.getAddress())
             .recipient(recipient)
-            .ttl(BigInteger.ZERO)
             .nonce(getNextNonce(baseKeyPair.getAddress()))
             .build();
     try {
