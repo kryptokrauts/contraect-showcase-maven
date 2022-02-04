@@ -113,7 +113,7 @@ public class SimpleGAMultiSigTest extends BaseTest {
       /** First Signer proposes and automatically confirms */
       this.proposeSpendTransaction(gaTxHash, 5, signers.get(0));
 
-      this.confirmSigner(gaTxHash, signers.get(1), "{\"abort\":[\"ERROR_TX_ALREADY_EXPIRED\"]}");
+      this.confirmSigner(gaTxHash, signers.get(1), "{\"abort\":[\"ERROR_TX_EXPIRED\"]}");
 
     } catch (Exception e) {
       log.error("Error testing generalized accounts spend tx success case: " + e);
@@ -159,7 +159,7 @@ public class SimpleGAMultiSigTest extends BaseTest {
           gaTxHash,
           DEFAULT_TTL,
           signers.get(0),
-          "{\"abort\":[\"ERROR_A_TX_IS_ALREADY_PROPOSED\"]}");
+          "{\"abort\":[\"ERROR_EXISTING_PROPOSED_TX_NOT_EXPIRED\"]}");
 
     } catch (Exception e) {
       log.error("Error testing generalized accounts spend tx success case: " + e);
