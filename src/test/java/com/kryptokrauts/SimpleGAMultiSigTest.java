@@ -259,17 +259,11 @@ public class SimpleGAMultiSigTest extends BaseTest {
     log.info("GA attach transaction result: {}", result);
   }
 
-  /**
-   * get the current contracts nonce
-   *
-   * @return
-   */
-  private String getContractNonce() {
-    Object resultObject =
-        aeternityService.transactions.blockingReadOnlyContractCall(
-            getGAContractAddress(), "get_nonce", getContractCode());
-    log.debug("Current gaContract nonce is: {}", resultObject);
-    return resultObject.toString();
+  private void logConsensusInfo() {
+    Object resultObject = aeternityService.transactions
+        .blockingReadOnlyContractCall(getGAContractAddress(), "get_consensus_info",
+            getContractCode());
+    log.info("Consensus Info: {}", resultObject.toString());
   }
 
   /**
@@ -290,19 +284,15 @@ public class SimpleGAMultiSigTest extends BaseTest {
    * @param spendTxModel
    * @throws Throwable
    */
-  private void callAuthFunction(SpendTransactionModel spendTxModel, KeyPair caller)
-      throws Throwable {
+  private void callAuthFunction(SpendTransactionModel spendTxModel, KeyPair caller) {
     /** Call GAMeta tx */
     log.info("{} calls authentication function", caller.getAddress());
-
-    List<String> paramList = List.of(getContractNonce());
-    log.debug("Using parameters for call authorize: {}", paramList);
 
     String callData =
         aeternityService
             .compiler
             .blockingEncodeCalldata(
-                getContractCode(), "authorize", paramList, Collections.emptyMap())
+                getContractCode(), "authorize", null, Collections.emptyMap())
             .getResult();
 
     assertNotNull(callData);
@@ -319,6 +309,7 @@ public class SimpleGAMultiSigTest extends BaseTest {
           aeternityService.transactions.blockingPostTransaction(
               gaMetaTx, caller.getEncodedPrivateKey());
       log.info("gaMetaTx result: {}", result);
+      logConsensusInfo();
     } catch (Throwable t) {
       log.error("Error calling gaMetaTx: ", t);
       fail(t);
@@ -343,7 +334,7 @@ public class SimpleGAMultiSigTest extends BaseTest {
           signer.getAddress(),
           gaTxHash);
 
-      List<Object> params = Arrays.asList(getSignature(gaTxHash, signer), getContractNonce());
+      List<Object> params = Arrays.asList(getSignature(gaTxHash, signer));
       ContractTxResult txResult =
           aeternityService.transactions.blockingStatefulContractCall(
               getGAContractAddress(),
@@ -357,6 +348,7 @@ public class SimpleGAMultiSigTest extends BaseTest {
       } else {
         assertEquals("ok", txResult.getCallResult().getReturnType());
         log.info("Signer {} successfully confirmed proposed spend tx", signer.getAddress());
+        logConsensusInfo();
       }
     } catch (Throwable e) {
       fail("Error confirming proposed tx for signer " + signer.getAddress(), e);
@@ -385,8 +377,7 @@ public class SimpleGAMultiSigTest extends BaseTest {
                     List.of(
                         new SophiaHash(gaTxHash),
                         new SophiaChainTTL(BigInteger.valueOf(relativeTtl), Type.RelativeTTL),
-                        new SophiaSignature(getSignature(gaTxHash, keyPair)),
-                        getContractNonce()))
+                        new SophiaSignature(getSignature(gaTxHash, keyPair))))
                 .customKeyPair(keyPair)
                 .build());
     log.info("Tx result of propose spendTx is: {}", txResult);
@@ -397,6 +388,7 @@ public class SimpleGAMultiSigTest extends BaseTest {
     } else {
       assertEquals("ok", txResult.getCallResult().getReturnType());
       log.info("Signer {} successfully proposed spend tx", keyPair.getAddress());
+      logConsensusInfo();
     }
   }
 
@@ -435,7 +427,9 @@ public class SimpleGAMultiSigTest extends BaseTest {
     return Pair.with(gaTxHash, spendTxModel);
   }
 
-  /** helper methods */
+  /**
+   * helper methods
+   */
   private String getSignature(String hash, KeyPair keypair) throws Throwable {
     return "#" + Hex.toHexString(SigningUtil.sign(hash, keypair.getEncodedPrivateKey()));
   }
